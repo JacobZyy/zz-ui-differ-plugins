@@ -10,6 +10,9 @@
     "clean": "rm -rf ../../dist/plugin-chrome ../../dist/plugin-chrome-*.zip",
     "clean:modules": "rm -rf ./node_modules"
   },
+  "dependencies": {
+    "@ui-differ/core": "workspace:^"
+  },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",
     "@types/chrome": "^0.1.1",

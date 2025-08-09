@@ -15,7 +15,8 @@
     "build:main": "cross-env TARGET=main vite build"
   },
   "dependencies": {
-    "@mastergo/plugin-typings": "^2.2.0"
+    "@mastergo/plugin-typings": "^2.2.0",
+    "@ui-differ/core": "workspace:^"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",
