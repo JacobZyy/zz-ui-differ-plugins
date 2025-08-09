@@ -1,0 +1,27 @@
+{
+  "name": "@ui-differ/plugin-master-go",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=14.14.0"
+  },
+  "scripts": {
+    "dev": "pnpm dev:ui & pnpm dev:main",
+    "dev:ui": "cross-env TARGET=ui NODE_ENV=development vite build --mode development -w",
+    "dev:main": "cross-env TARGET=main NODE_ENV=development vite build --mode development -w",
+    "build": "pnpm build:ui && pnpm build:main",
+    "clean": "rm -rf ../../dist/plugin-master-go",
+    "clean:modules": "rm -rf ./node_modules",
+    "build:ui": "cross-env TARGET=ui vite build",
+    "build:main": "cross-env TARGET=main vite build"
+  },
+  "dependencies": {
+    "@mastergo/plugin-typings": "^2.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.5",
+    "@types/babel__core": "^7.1.18",
+    "cross-env": "^7.0.3",
+    "vite-plugin-html": "^3.0.6",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

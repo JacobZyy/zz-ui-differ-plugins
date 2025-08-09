@@ -1,0 +1,13 @@
+{
+  "name": "ui-differ-plugin-master-go",
+  "id": 168177384255677,
+  "main": "dist/main.js",
+  "ui": "dist/index.html",
+  "editor_type": [
+    "canvas",
+    "devMode"
+  ],
+  "capabilities": [
+    "inspect"
+  ]
+}
