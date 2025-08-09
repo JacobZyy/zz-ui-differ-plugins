@@ -1,0 +1,25 @@
+.float-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  :global {
+    .ant-float-btn-body {
+      padding: 0;
+      .ant-float-btn-content {
+        margin: 0;
+        padding: 0;
+        .ant-float-btn-icon {
+          font-size: 40px;
+          width: 40px;
+          margin: 0;
+          padding: 0;
+        }
+      }
+    }
+  }
+}
+
+.default-node-tag {
+  margin: 0;
+  width: fit-content;
+}

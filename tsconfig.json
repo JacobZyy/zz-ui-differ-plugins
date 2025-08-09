@@ -9,6 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "types": ["vite/client", "chrome", "@mastergo/plugin-typings"],
     "allowImportingTsExtensions": true,
     "allowJs": false,
     "strict": true,

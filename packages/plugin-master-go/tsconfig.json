@@ -8,9 +8,6 @@
       "@ui/*": ["./ui/*"],
       "@messages/*": ["./messages/*"]
     },
-    "types": [
-      "@mastergo/plugin-typings"
-    ],
     "outDir": "../dist",
     "esModuleInterop": false,
     "skipLibCheck": false

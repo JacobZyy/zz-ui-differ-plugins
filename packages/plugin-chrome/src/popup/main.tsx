@@ -1,10 +1,10 @@
-import { StrictMode } from 'react'
+import { ConfigProvider } from 'antd'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <ConfigProvider theme={{ cssVar: true }}>
     <App />
-  </StrictMode>,
+  </ConfigProvider>,
 )
