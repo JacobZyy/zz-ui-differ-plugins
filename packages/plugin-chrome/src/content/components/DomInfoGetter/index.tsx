@@ -1,11 +1,8 @@
-import type { MsgDataType } from '@/core/type'
+import { onDomInfoRecorder } from '@ui-differ/core'
 import { FloatButton, Modal } from 'antd'
 import { useEffect, useState } from 'react'
-import { mgFrameData } from '@/content/nodeData'
 import useDocumentWidth from '@/content/storage/useDocumentWidth'
-import distanceDiff from '@/core/distanceDiff'
 import { generateScreenShot } from '@/core/generateScreenShot'
-import { getDesignDistanceInfo } from '@/core/getDesignDistanceInfo'
 import styles from './index.module.scss'
 import RootDetector from './RootDetector'
 
@@ -34,31 +31,34 @@ export default function DomInfoGetter() {
   }
 
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
-    const mgDistanceInfoMap = getDesignDistanceInfo(mgFrameData)
-    const diffResultMap = distanceDiff(mgDistanceInfoMap, rootNode)
-    diffResultMap.forEach((value, key) => {
-      const dom = document.querySelector(`[unique-id="${key}"]`)
-    })
-    const diffResultRecord = Object.fromEntries(diffResultMap.entries())
-    handleCloseModal()
-    const result = await handleGetScreenShot()
-    const { screenShot, documentSize } = result || {}
-    const msgData: MsgDataType = {
-      diffResult: diffResultRecord,
-      screenShot,
-      documentSize,
-    }
+    console.log('🚀 ~ handleStartUiDiff ~ rootNode:', rootNode)
+    const flatNodeMap = onDomInfoRecorder(rootNode)
+    console.log('🚀 ~ handleStartUiDiff ~ flatNodeMap:', flatNodeMap)
+
+    // const mgDistanceInfoMap = getDesignDistanceInfo(mgFrameData)
+    // diffResultMap.forEach((value, key) => {
+    //   const dom = document.querySelector(`[unique-id="${key}"]`)
+    // })
+    // const diffResultRecord = Object.fromEntries(diffResultMap.entries())
+    // handleCloseModal()
+    // const result = await handleGetScreenShot()
+    // const { screenShot, documentSize } = result || {}
+    // const msgData: MsgDataType = {
+    //   diffResult: diffResultRecord,
+    //   screenShot,
+    //   documentSize,
+    // }
     // 比对完成后，通知 background 打开 popup
-    chrome.runtime.sendMessage({
-      type: 'COMPARE_SUCCESS',
-      data: msgData,
-    }).catch(console.error)
+    // chrome.runtime.sendMessage({
+    //   type: 'COMPARE_SUCCESS',
+    //   data: msgData,
+    // }).catch(console.error)
   }
 
   const handleInitRemInfo = () => {
     const fontSize = document.documentElement.style.fontSize.replace('px', '')
     setDocumentWidth(document.documentElement.clientWidth)
-    setRootFontSize(Number(fontSize))
+    setRootFontSize(Number(fontSize) || 16)
   }
 
   useEffect(() => {

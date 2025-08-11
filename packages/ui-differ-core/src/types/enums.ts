@@ -1,0 +1,23 @@
+/**
+ * 相对于当前节点的兄弟节点位置枚举
+ */
+export enum SiblingPosition {
+  /** 不在任何位置 */
+  NONE = 0,
+  /** 左上角 */
+  TOP_LEFT = 1,
+  /** 正上方 */
+  TOP = 2,
+  /** 右上角 */
+  TOP_RIGHT = 3,
+  /** 左侧 */
+  LEFT = 4,
+  /** 右侧 */
+  RIGHT = 6,
+  /** 左下角 */
+  BOTTOM_LEFT = 7,
+  /** 正下方 */
+  BOTTOM = 8,
+  /** 右下角 */
+  BOTTOM_RIGHT = 9,
+}

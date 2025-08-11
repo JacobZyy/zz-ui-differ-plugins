@@ -1,6 +1,6 @@
+import { initialDomUUID } from '@ui-differ/core'
 import { Button, Flex, Form, Input, Space, Tag, Typography } from 'antd'
 import { useEffect, useState } from 'react'
-import setElementUUID from '@/core/setElementUUID'
 import styles from './index.module.scss'
 
 const { Text } = Typography
@@ -39,8 +39,9 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
       processNotFountError()
       return
     }
-    setElementUUID(targetNode)
     setTargetRootNode(targetNode)
+    /** 初始化节点唯一 id */
+    initialDomUUID(targetNode)
   }
 
   const handleSubmitFindNode = (values: { rootClsName: string }) => {
@@ -51,6 +52,8 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
       return
     }
     setTargetRootNode(targetNode)
+    /** 初始化节点唯一 id */
+    initialDomUUID(targetNode)
   }
 
   const handleCloseModal = () => {
