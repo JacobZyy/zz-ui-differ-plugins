@@ -1,3 +1,4 @@
+import type { Options } from 'vite-plugin-zip-pack'
 import path from 'node:path'
 import { crx } from '@crxjs/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
@@ -6,6 +7,12 @@ import { defineConfig } from 'vite'
 import zip from 'vite-plugin-zip-pack'
 import manifest from './manifest.config.js'
 import { version } from './package.json'
+
+const zipPluginOptions: Options = {
+  inDir: path.resolve(__dirname, '../../dist/plugin-chrome'),
+  outDir: path.resolve(__dirname, '../../dist'),
+  outFileName: `plugin-chrome-${version}.zip`,
+}
 
 export default defineConfig({
   resolve: {
@@ -21,12 +28,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     crx({ manifest }),
-    zip({
-      inDir: path.resolve(__dirname, '../../dist/plugin-chrome'),
-      outDir: path.resolve(__dirname, '../../dist'),
-      outFileName: `plugin-chrome-${version}.zip`,
-    }),
+    // @ts-expect-error zip plugin types are not compatible with vite 7
+    zip(zipPluginOptions),
   ],
+  css: {
+    modules: {
+      localsConvention: 'camelCase',
+    },
+  },
   server: {
     cors: {
       origin: [

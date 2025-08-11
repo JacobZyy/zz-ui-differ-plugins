@@ -5,9 +5,9 @@
     "node": ">=14.14.0"
   },
   "scripts": {
-    "dev": "pnpm dev:ui & pnpm dev:main",
-    "dev:ui": "cross-env TARGET=ui NODE_ENV=development vite build --mode development -w",
-    "dev:main": "cross-env TARGET=main NODE_ENV=development vite build --mode development -w",
+    "dev": "echo \"🚀 [MasterGo Plugin] Starting development build...\" && pnpm dev:ui & pnpm dev:main",
+    "dev:ui": "echo \"📱 [MasterGo UI] Watching UI changes...\" && cross-env TARGET=ui NODE_ENV=development vite build --mode development -w",
+    "dev:main": "echo \"⚙️  [MasterGo Main] Watching main logic changes...\" && cross-env TARGET=main NODE_ENV=development vite build --mode development -w",
     "build": "pnpm build:ui && pnpm build:main",
     "clean": "rm -rf ../../dist/plugin-master-go",
     "clean:modules": "rm -rf ./node_modules",

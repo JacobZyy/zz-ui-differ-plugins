@@ -1,4 +1,4 @@
-import { Button, Flex, Form, Input, Tag, Typography } from 'antd'
+import { Button, Flex, Form, Input, Space, Tag, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import setElementUUID from '@/core/setElementUUID'
 import styles from './index.module.scss'
@@ -15,6 +15,7 @@ interface RootDetectorProps {
 
 export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) {
   const [targetRootNode, setTargetRootNode] = useState<HTMLElement | null>(null)
+  const [isEdit, _setIsEdit] = useState(false)
   const [form] = Form.useForm()
 
   function processNotFountError(className?: string) {
@@ -80,7 +81,7 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
           <Tag color="green" className={styles.defaultNodeTag}>[第一个子节点]</Tag>
         </Flex>
       </Flex>
-      {!targetRootNode && (
+      {(!targetRootNode || isEdit) && (
         <Form form={form} onFinish={handleSubmitFindNode} layout="vertical">
           <Form.Item name="rootClsName" label="根节点className" required rules={[{ required: true, message: '请输入根节点的className' }]}>
             <Input placeholder="请输入根节点的className" />
@@ -96,10 +97,15 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
         </Form>
       )}
 
-      {targetRootNode && (
-        <Flex vertical gap={4}>
+      {(targetRootNode && !isEdit) && (
+        <Flex vertical gap={4} justify="center">
           <Typography.Text>您的HTML根节点为：</Typography.Text>
-          <Tag color="lime" className={styles.defaultNodeTag}>{targetRootNode.className}</Tag>
+          <Space.Compact>
+            <Tag color="lime" className={styles.defaultNodeTag}>{targetRootNode.className}</Tag>
+            {/* <Flex align="center">
+            </Flex>
+            <Button icon={<EditOutlined />} onClick={() => setIsEdit(true)} /> */}
+          </Space.Compact>
           <Flex justify="end" gap={4}>
             <Button type="primary" onClick={handleStartUiDiff}>
               开始ui比对

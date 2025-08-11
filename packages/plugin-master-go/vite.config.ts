@@ -2,7 +2,6 @@ import type { BuildOptions, PluginOption, UserConfig } from 'vite'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { createHtmlPlugin } from 'vite-plugin-html'
@@ -65,7 +64,6 @@ export default defineConfig(() => {
 
   const config: UserConfig = {
     plugins: [
-      tailwindcss(),
       react(),
       copyManifestPlugin(),
       ...plugins,

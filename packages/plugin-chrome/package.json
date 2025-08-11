@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "echo \"🚀 [Chrome Plugin] Starting development server...\" && vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "clean": "rm -rf ../../dist/plugin-chrome ../../dist/plugin-chrome-*.zip",
