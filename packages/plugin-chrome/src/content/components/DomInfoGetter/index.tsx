@@ -1,4 +1,4 @@
-import { onDomInfoRecorder } from '@ui-differ/core'
+import { onDomInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, searchNeighborNodes, SiblingPosition } from '@ui-differ/core'
 import { FloatButton, Modal } from 'antd'
 import { useEffect, useState } from 'react'
 import useDocumentWidth from '@/content/storage/useDocumentWidth'
@@ -31,9 +31,40 @@ export default function DomInfoGetter() {
   }
 
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
-    console.log('🚀 ~ handleStartUiDiff ~ rootNode:', rootNode)
-    const flatNodeMap = onDomInfoRecorder(rootNode)
-    console.log('🚀 ~ handleStartUiDiff ~ flatNodeMap:', flatNodeMap)
+    const initiedFlatNodeMap = onDomInfoRecorder(rootNode)
+    const rootNodeId = rootNode.getAttribute('unique-id') || ''
+    const rootNodeInfo = initiedFlatNodeMap.get(rootNodeId)
+    if (!rootNodeInfo) {
+      console.error('rootNode has no unique-id')
+      return
+    }
+    // 合并无效padding
+    const paddingMergedFlatNodeMap = processPaddingInfo(rootNodeInfo, initiedFlatNodeMap)
+    // 移除相同尺寸、位置的子节点
+    const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(rootNodeInfo, paddingMergedFlatNodeMap)
+    // 搜索邻居节点
+    const flatNodeMap = searchNeighborNodes(rootNodeInfo, removedSameSizePositionChildrenFlatNodeMap)
+
+    flatNodeMap.forEach((value, key) => {
+      const currentDom = document.querySelector(`[unique-id="${key}"]`)
+      console.log('🚀 ~ handleStartUiDiff ~ currentDom:', currentDom)
+      const topDom = document.querySelector(`[unique-id="${value[SiblingPosition.TOP]}"]`)
+      if (topDom) {
+        console.log('             🚀 ~ handleStartUiDiff ~ topDom:', topDom)
+      }
+      const leftDom = document.querySelector(`[unique-id="${value[SiblingPosition.LEFT]}"]`)
+      if (leftDom) {
+        console.log('             🚀 ~ handleStartUiDiff ~ leftDom:', leftDom)
+      }
+      const rightDom = document.querySelector(`[unique-id="${value[SiblingPosition.RIGHT]}"]`)
+      if (rightDom) {
+        console.log('             🚀 ~ handleStartUiDiff ~ rightDom:', rightDom)
+      }
+      const bottomDom = document.querySelector(`[unique-id="${value[SiblingPosition.BOTTOM]}"]`)
+      if (bottomDom) {
+        console.log('              🚀 ~ handleStartUiDiff ~ bottomDom:', bottomDom)
+      }
+    })
 
     // const mgDistanceInfoMap = getDesignDistanceInfo(mgFrameData)
     // diffResultMap.forEach((value, key) => {

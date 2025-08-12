@@ -26,6 +26,7 @@ export default defineConfig({
       // 格式
       formats: ['es'],
     },
+    minify: false,
     rollupOptions: {
       // 确保外部化那些你不想打包进库的依赖
       external: [],

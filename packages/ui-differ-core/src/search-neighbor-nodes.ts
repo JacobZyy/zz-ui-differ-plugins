@@ -1,7 +1,7 @@
 import type { BoundingRect, NodeInfo, UniqueId } from './types'
 import { clone } from 'radash'
-import { floorOrderTraversal } from './floor-order-traversal'
 import { currentNodeToSiblingPositionMap, SiblingPosition, validateSiblingPosList } from './types'
+import { floorOrderTraversal } from './utils/floor-order-traversal'
 
 /** 寻找单个位置的兄弟节点配置 */
 interface FindSinglePositionSiblingConfig {
@@ -26,11 +26,11 @@ function getNodePosition(currentNode: NodeInfo, siblingNode: NodeInfo): SiblingP
   // 是否在147
   const isAtLeft = siblingNode.boundingRect.x + siblingNode.boundingRect.width <= currentNode.boundingRect.x
   // 是否在369
-  const isAtRight = siblingNode.boundingRect.x + siblingNode.boundingRect.width <= currentNode.boundingRect.x + currentNode.boundingRect.width
+  const isAtRight = currentNode.boundingRect.x + currentNode.boundingRect.width <= siblingNode.boundingRect.x
   // 是否在123
   const isAtTop = siblingNode.boundingRect.y + siblingNode.boundingRect.height <= currentNode.boundingRect.y
   // 是否在789
-  const isAtBottom = siblingNode.boundingRect.y + siblingNode.boundingRect.height <= currentNode.boundingRect.y + currentNode.boundingRect.height
+  const isAtBottom = currentNode.boundingRect.y + currentNode.boundingRect.height <= siblingNode.boundingRect.y
   // 是否在 2和 8 的区域
   const isHorizontalMiddle = !isAtLeft && !isAtRight
   // 是否在 4和 6 的区域
@@ -183,16 +183,6 @@ function onSearchNodeNeighbors(nodeId: UniqueId, flatNodeMap: Map<UniqueId, Node
         ...currentNodeInfo,
         [position]: targetSiblingNodeId,
       })
-      // 获取兄弟节点信息
-      const targetSiblingNodeInfo = flatNodeMap.get(targetSiblingNodeId)
-      if (!targetSiblingNodeInfo) {
-        return
-      }
-      // 如果兄弟节点存在，更新兄弟节点的相邻节点信息
-      flatNodeMap.set(targetSiblingNodeId, {
-        ...targetSiblingNodeInfo,
-        [siblingPos]: nodeId,
-      })
       return
     }
     // 如果兄弟节点不存在，则在父节点及父节点的相邻节点中找当前节点的相邻节点信息
@@ -205,17 +195,6 @@ function onSearchNodeNeighbors(nodeId: UniqueId, flatNodeMap: Map<UniqueId, Node
       ...currentNodeInfo,
       [position]: targetParentSiblingNodeId,
     })
-    // 找到的父节点中的相邻节点信息
-    const targetParentSiblingNodeInfo = flatNodeMap.get(targetParentSiblingNodeId)
-    // 没有这个节点，或者相邻节点为父节点，则不更新对应相邻节点的信息
-    if (!targetParentSiblingNodeInfo || currentNodeInfo.parentId === targetParentSiblingNodeId) {
-      return
-    }
-    // 更新父节点的相邻节点的相邻节点为当前节点
-    flatNodeMap.set(targetParentSiblingNodeId, {
-      ...targetParentSiblingNodeInfo,
-      [siblingPos]: nodeId,
-    })
   })
 }
 
@@ -225,10 +204,9 @@ function onSearchNodeNeighbors(nodeId: UniqueId, flatNodeMap: Map<UniqueId, Node
  */
 export function searchNeighborNodes(rootNode: NodeInfo, flatNodeMap: Map<UniqueId, NodeInfo>) {
   // 深拷贝一份
-  const newFlatNodeMap = clone(flatNodeMap)
-  const searchFn = (nodeId: UniqueId) => {
-    return onSearchNodeNeighbors(nodeId, newFlatNodeMap)
-  }
-  floorOrderTraversal(rootNode.uniqueId, newFlatNodeMap, searchFn)
+  const newFlatNodeMap = new Map<UniqueId, NodeInfo>(Array.from(flatNodeMap.entries()).map(([key, value]) => [key, clone(value)]))
+  const floorOrderIds = Array.from(floorOrderTraversal(rootNode.uniqueId, newFlatNodeMap))
+  floorOrderIds.forEach(nodeId => onSearchNodeNeighbors(nodeId, newFlatNodeMap))
+
   return newFlatNodeMap
 }
