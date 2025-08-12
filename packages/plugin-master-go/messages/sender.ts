@@ -1,10 +1,11 @@
 // 插件发出的消息
 export enum PluginMessage {
+  SELECTION_CHANGE = 'SELECTION_CHANGE',
 }
 
 // UI发出的消息
 export enum UIMessage {
-  HELLO = 'Hello!',
+  GET_SELECTION = 'GET_SELECTION',
 }
 
 interface MessageType {

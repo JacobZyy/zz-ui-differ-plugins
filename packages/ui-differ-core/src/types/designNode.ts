@@ -1,0 +1,18 @@
+/** 有子节点的节点类型 */
+export type NodeWithChild = GroupNode | FrameNode | ComponentNode | ComponentSetNode | InstanceNode
+
+/** 无子节点的节点类型 */
+export type NodeNoChild
+  = | PenNode
+    | StarNode
+    | LineNode
+    | EllipseNode
+    | PolygonNode
+    | RectangleNode
+    | TextNode
+    | SliceNode
+    | BooleanOperationNode
+    | ConnectorNode
+
+export const nodeWithChildSet = new Set<SceneNode['type']>(['FRAME', 'COMPONENT', 'COMPONENT_SET', 'GROUP', 'INSTANCE'])
+export const nodeNoChildSet = new Set<SceneNode['type']>(['BOOLEAN_OPERATION', 'CONNECTOR', 'ELLIPSE', 'LINE', 'PEN', 'POLYGON', 'RECTANGLE', 'SLICE', 'STAR', 'TEXT'])

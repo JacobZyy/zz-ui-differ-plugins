@@ -1,11 +1,21 @@
-import { UIMessage } from '@messages/sender'
+import { PluginMessage, UIMessage } from '@messages/sender'
 
-mg.showUI(__html__)
+mg.showUI(__html__, {
+  width: 860,
+  height: 1000,
+})
+
+function sendSelectionToUI() {
+  const selection = mg.document.currentPage.selection
+  mg.ui.postMessage({ type: PluginMessage.SELECTION_CHANGE, data: selection })
+}
+
+// 监听选择变化事件
+mg.on('selectionchange', sendSelectionToUI)
 
 mg.ui.onmessage = (msg: { type: UIMessage, data: any }) => {
-  const { type, data } = msg
-  if (type === UIMessage.HELLO) {
-    const textNode = mg.createText()
-    textNode.characters = data
+  const { type } = msg
+  if (type === UIMessage.GET_SELECTION) {
+    return sendSelectionToUI()
   }
 }

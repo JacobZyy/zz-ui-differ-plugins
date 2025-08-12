@@ -1,10 +1,12 @@
+import type { BorderInfo, PaddingInfo } from '../types'
+
 /**
  * 获取dom的内边距的值
  * @param dom 目标dom
  * @param styleName 样式名
  * @returns 样式值
  */
-export function getPaddingInfo(dom: Element) {
+export function getPaddingInfo(dom: Element): PaddingInfo {
   // 获取dom的计算样式
   const computedStyle = window.getComputedStyle(dom)
   // 获取transform矩阵
@@ -23,7 +25,7 @@ export function getPaddingInfo(dom: Element) {
   const paddingTop = Number(computedStyle.getPropertyValue('padding-top').replace('px', '')) || 0
   const paddingBottom = Number(computedStyle.getPropertyValue('padding-bottom').replace('px', '')) || 0
 
-  const paddingInfo: Record<string, number> = {
+  const paddingInfo: PaddingInfo = {
     paddingLeft: paddingLeft / scaleX,
     paddingRight: paddingRight / scaleX,
     paddingTop: paddingTop / scaleY,
@@ -39,6 +41,10 @@ export function getPaddingInfo(dom: Element) {
  */
 export function getBackgroundColor(dom: Element) {
   const computedStyle = window.getComputedStyle(dom)
+  const image = computedStyle.getPropertyValue('background-image')
+  if (image) {
+    return 'background-image'
+  }
   const color = computedStyle.getPropertyValue('background-color')
   const colorArray = color.split('(')[1].split(')')[0].split(',').map(Number)
   const alphaValue = colorArray[3] || 1
@@ -53,7 +59,7 @@ export function getBackgroundColor(dom: Element) {
  * @param dom 目标dom
  * @returns 边框信息
  */
-export function getBorderInfo(dom: Element) {
+export function getBorderInfo(dom: Element): BorderInfo {
   const computedStyle = window.getComputedStyle(dom)
   const borderWidthLeft = Number(computedStyle.getPropertyValue('border-left-width').replace('px', '')) || 0
   const borderWidthRight = Number(computedStyle.getPropertyValue('border-right-width').replace('px', '')) || 0
@@ -65,14 +71,14 @@ export function getBorderInfo(dom: Element) {
   const borderColorTop = computedStyle.getPropertyValue('border-top-color')
   const borderColorBottom = computedStyle.getPropertyValue('border-bottom-color')
 
-  const borderWidth: Record<string, number> = {
+  const borderWidth: BorderInfo['borderWidth'] = {
     borderWidthLeft,
     borderWidthRight,
     borderWidthTop,
     borderWidthBottom,
   }
 
-  const borderColor: Record<string, string> = {
+  const borderColor: BorderInfo['borderColor'] = {
     borderColorLeft,
     borderColorRight,
     borderColorTop,

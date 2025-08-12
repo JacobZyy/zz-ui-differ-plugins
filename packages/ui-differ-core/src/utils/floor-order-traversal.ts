@@ -1,4 +1,6 @@
 import type { NodeInfo, UniqueId } from '../types'
+import type { NodeWithChild } from '../types/designNode'
+import { nodeNoChildSet } from '../types/designNode'
 
 /**
  * @description 层序遍历节点
@@ -44,6 +46,37 @@ export function* floorOrderTraversalWithDom(rootDom: Element): Generator<Element
 
     // 将所有子元素节点加入队列（只处理元素节点，忽略文本节点等）
     const children = Array.from(currentDom.children || [])
+    queue.push(...children)
+  }
+}
+
+/**
+ * @description 同步层序遍历DOM节点生成器，内存友好
+ * @param {SceneNode} rootNode 设计稿根节点
+ * @yields {SceneNode} 按层序遍历的每个设计稿节点
+ * @example
+ * ```typescript
+ * const domOrderList = Array.from(floorOrderTraversalWithNode(rootNode))
+ * console.log(domOrderList)
+ * ```
+ */
+export function* floorOrderTraversalWithNode(rootNode: SceneNode): Generator<SceneNode, void, unknown> {
+  const queue: SceneNode[] = [rootNode]
+
+  while (queue.length > 0) {
+    const currentNode = queue.shift()
+    if (!currentNode)
+      continue
+
+    // 产出当前节点
+    yield currentNode
+
+    if (nodeNoChildSet.has(currentNode.type)) {
+      continue
+    }
+
+    // 将所有子元素节点加入队列（只处理元素节点，忽略文本节点等）
+    const children = Array.from((currentNode as NodeWithChild).children || [])
     queue.push(...children)
   }
 }

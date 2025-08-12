@@ -1,5 +1,6 @@
-import type { BoundingRect, NodeInfo } from './types'
-import { floorOrderTraversalWithDom } from './utils/floor-order-traversal'
+import type { BoundingRect, NodeInfo } from '../types'
+import { floorOrderTraversalWithDom } from '../utils/floor-order-traversal'
+import { getBackgroundColor, getBorderInfo, getPaddingInfo } from './get-dom-style-value'
 
 function processSingleDomNodeInfo(domNode: Element) {
   const nodeId = domNode.getAttribute('unique-id')
@@ -14,18 +15,22 @@ function processSingleDomNodeInfo(domNode: Element) {
     height: boundingRect.height,
   }
 
-  const parentNodeDom = domNode.parentElement
-
   // 获取子节点id
   const childrenIds = Array.from(domNode.children).map(child => child.getAttribute('unique-id')).filter(id => id != null)
   const parentId = domNode.parentElement?.getAttribute('unique-id')
   const siblingIds = Array.from(domNode.parentElement?.children || []).map(sibling => sibling.getAttribute('unique-id')).filter(id => id !== nodeId).filter(id => id != null)
+  const borderInfo = getBorderInfo(domNode)
+  const paddingInfo = getPaddingInfo(domNode)
+  const backgroundColor = getBackgroundColor(domNode)
   const newNode: NodeInfo = {
     uniqueId: nodeId,
     boundingRect: realBoundingRect,
     parentId: parentId || '',
     children: childrenIds,
     sibling: siblingIds,
+    borderInfo,
+    paddingInfo,
+    backgroundColor,
   }
   return newNode
 }

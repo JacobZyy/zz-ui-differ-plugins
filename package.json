@@ -26,10 +26,13 @@
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
     "@tailwindcss/vite": "^4.1.11",
+    "ahooks": "^3.9.0",
+    "antd": "^5.26.7",
     "immer": "^10.1.1",
     "radash": "^12.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "reset-css": "^5.0.2",
     "tailwindcss": "^4.1.11",
     "uuid": "^11.1.0"
   },

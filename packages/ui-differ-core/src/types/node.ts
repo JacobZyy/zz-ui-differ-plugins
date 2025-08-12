@@ -2,6 +2,20 @@ import { SiblingPosition } from './enums'
 
 export type UniqueId = string
 
+type BorderWidthKey = 'borderWidthLeft' | 'borderWidthRight' | 'borderWidthTop' | 'borderWidthBottom'
+type BorderColorKey = 'borderColorLeft' | 'borderColorRight' | 'borderColorTop' | 'borderColorBottom'
+export interface BorderInfo {
+  borderWidth: Record<BorderWidthKey, number>
+  borderColor: Record<BorderColorKey, string>
+}
+
+export interface PaddingInfo {
+  paddingLeft: number
+  paddingRight: number
+  paddingTop: number
+  paddingBottom: number
+}
+
 /**
  * 节点边界
  */
@@ -29,6 +43,12 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   uniqueId: UniqueId
   /** 节点边界 */
   boundingRect: BoundingRect
+  /** padding信息 */
+  paddingInfo: PaddingInfo
+  /** border信息 */
+  borderInfo: BorderInfo
+  /** 背景色 */
+  backgroundColor: string
 }
 
 /** 有效的兄弟节点位置 */

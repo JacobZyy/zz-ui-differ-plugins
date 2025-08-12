@@ -1,8 +1,7 @@
-import type { NodeInfo, UniqueId } from './types'
+import type { NodeInfo, UniqueId } from '../types'
 import { produce } from 'immer'
-import { SiblingPosition } from './types'
-import { isSameDistance } from './utils/compare-distance'
-import { floorOrderTraversal } from './utils/floor-order-traversal'
+import { SiblingPosition } from '../types'
+import { isSameDistance } from '../utils/compare-distance'
 
 /**
  * 替换目标位置的节点
@@ -36,6 +35,9 @@ function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: N
     children: childNodeInfo.children,
     boundingRect: childNodeInfo.boundingRect,
     parentId: parentNodeInfo.parentId,
+    paddingInfo: childNodeInfo.paddingInfo,
+    borderInfo: childNodeInfo.borderInfo,
+    backgroundColor: childNodeInfo.backgroundColor,
     // 判断的逻辑是父节点只有一个子节点
     // 所以可以直接把父节点的兄弟节点作为该子节点的兄弟节点
     sibling: parentNodeInfo.sibling,
@@ -44,6 +46,7 @@ function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: N
     [SiblingPosition.BOTTOM]: parentNodeInfo[SiblingPosition.BOTTOM],
     [SiblingPosition.LEFT]: parentNodeInfo[SiblingPosition.LEFT],
     [SiblingPosition.RIGHT]: parentNodeInfo[SiblingPosition.RIGHT],
+
   }
   return mergedNodeInfo
 }
@@ -75,9 +78,9 @@ function updateOtherNodeInfo(parentNodeId: UniqueId, replaceChildNodeId: UniqueI
   }
 }
 
-export function removeSameSizePositionChildren(rootNode: NodeInfo, flatNodeMap: Map<UniqueId, NodeInfo>) {
+export function removeSameSizePositionChildren(flatNodeMap: Map<UniqueId, NodeInfo>) {
   // 原层序的顺序
-  const floorNodeIdList = Array.from(floorOrderTraversal(rootNode.uniqueId, flatNodeMap))
+  const floorNodeIdList = Array.from(flatNodeMap.keys())
 
   // 需要取代的节点的键值对 key: 需要被取代的节点，value: 取代的节点
   const nodeIdReplaceEntries = Array.from(floorNodeIdList).map((currentNodeId: UniqueId) => {

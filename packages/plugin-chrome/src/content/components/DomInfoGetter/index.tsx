@@ -1,3 +1,4 @@
+import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import { onDomInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, searchNeighborNodes, SiblingPosition } from '@ui-differ/core'
 import { FloatButton, Modal } from 'antd'
 import { useEffect, useState } from 'react'
@@ -9,11 +10,13 @@ import RootDetector from './RootDetector'
 export default function DomInfoGetter() {
   // 控制 Modal 显示状态
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [designNodeInfo, setDesignNodeInfo] = useState<Record<UniqueId, NodeInfo>>({})
   const setDocumentWidth = useDocumentWidth(state => state.setDocumentWidth)
   const setRootFontSize = useDocumentWidth(state => state.setRootFontSize)
   // 打开 Modal
-  const handleOpenModal = () => {
+  const handleOpenModal = async () => {
     setIsModalOpen(true)
+    const designNodeJSON = await navigator.clipboard.readText()
   }
 
   // 关闭 Modal
@@ -39,11 +42,11 @@ export default function DomInfoGetter() {
       return
     }
     // 合并无效padding
-    const paddingMergedFlatNodeMap = processPaddingInfo(rootNodeInfo, initiedFlatNodeMap)
+    const paddingMergedFlatNodeMap = processPaddingInfo(initiedFlatNodeMap)
     // 移除相同尺寸、位置的子节点
-    const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(rootNodeInfo, paddingMergedFlatNodeMap)
+    const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
     // 搜索邻居节点
-    const flatNodeMap = searchNeighborNodes(rootNodeInfo, removedSameSizePositionChildrenFlatNodeMap)
+    const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
 
     flatNodeMap.forEach((value, key) => {
       const currentDom = document.querySelector(`[unique-id="${key}"]`)
@@ -65,25 +68,6 @@ export default function DomInfoGetter() {
         console.log('              🚀 ~ handleStartUiDiff ~ bottomDom:', bottomDom)
       }
     })
-
-    // const mgDistanceInfoMap = getDesignDistanceInfo(mgFrameData)
-    // diffResultMap.forEach((value, key) => {
-    //   const dom = document.querySelector(`[unique-id="${key}"]`)
-    // })
-    // const diffResultRecord = Object.fromEntries(diffResultMap.entries())
-    // handleCloseModal()
-    // const result = await handleGetScreenShot()
-    // const { screenShot, documentSize } = result || {}
-    // const msgData: MsgDataType = {
-    //   diffResult: diffResultRecord,
-    //   screenShot,
-    //   documentSize,
-    // }
-    // 比对完成后，通知 background 打开 popup
-    // chrome.runtime.sendMessage({
-    //   type: 'COMPARE_SUCCESS',
-    //   data: msgData,
-    // }).catch(console.error)
   }
 
   const handleInitRemInfo = () => {
