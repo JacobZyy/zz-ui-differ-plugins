@@ -1,6 +1,6 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import { onDomInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, searchNeighborNodes, SiblingPosition } from '@ui-differ/core'
-import { FloatButton, Modal } from 'antd'
+import { FloatButton, message, Modal, Spin } from 'antd'
 import { useEffect, useState } from 'react'
 import useDocumentWidth from '@/content/storage/useDocumentWidth'
 import { generateScreenShot } from '@/core/generateScreenShot'
@@ -13,10 +13,40 @@ export default function DomInfoGetter() {
   const [designNodeInfo, setDesignNodeInfo] = useState<Record<UniqueId, NodeInfo>>({})
   const setDocumentWidth = useDocumentWidth(state => state.setDocumentWidth)
   const setRootFontSize = useDocumentWidth(state => state.setRootFontSize)
+  const [clipboardLoading, setClipboardLoading] = useState(false)
+
+  const onReadingClipboard = async () => {
+    try {
+      const designNodeJSON = await navigator.clipboard.readText()
+      return designNodeJSON
+    }
+    catch (error) {
+      console.error(error)
+      message.error('剪切板读取信息失败，请查看权限设置')
+    }
+    finally {
+      setClipboardLoading(false)
+    }
+  }
+
   // 打开 Modal
   const handleOpenModal = async () => {
-    setIsModalOpen(true)
-    const designNodeJSON = await navigator.clipboard.readText()
+    try {
+      setIsModalOpen(true)
+      setClipboardLoading(true)
+      // const designNodeJSON = await onReadingClipboard()
+      // if (!designNodeJSON)
+      //   return
+      // setDesignNodeInfo(JSON.parse(designNodeJSON))
+      // setClipboardLoading(false)
+    }
+    catch (error) {
+      console.error(error)
+      message.error('无效的json，请确认复制的节点内容')
+    }
+    finally {
+      setClipboardLoading(false)
+    }
   }
 
   // 关闭 Modal
@@ -99,7 +129,9 @@ export default function DomInfoGetter() {
         centered
         destroyOnHidden
       >
-        <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+        <Spin spinning={clipboardLoading} tip="读取剪切板信息中...">
+          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+        </Spin>
       </Modal>
     </>
   )
