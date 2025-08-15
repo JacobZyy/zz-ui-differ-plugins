@@ -29,6 +29,7 @@ export default defineManifest({
     'webRequest',
     'debugger',
     'tabs',
+    'windows',
   ],
   host_permissions: [
     'https://*/*',
