@@ -1,6 +1,6 @@
 import type { BoundingRect, NodeInfo } from '../types'
-import { floorOrderTraversalWithDom } from '../utils/floor-order-traversal'
-import { getBackgroundColor, getBorderInfo, getPaddingInfo } from './get-dom-style-value'
+import { floorOrderTraversalWithDom } from '../utils'
+import { getDomBackgroundColor, getDomBorderInfo, getDomPaddingInfo } from './get-dom-style-value'
 
 function processSingleDomNodeInfo(domNode: Element) {
   const nodeId = domNode.getAttribute('unique-id')
@@ -21,9 +21,9 @@ function processSingleDomNodeInfo(domNode: Element) {
   const childrenIds = Array.from(domNode.children).map(child => child.getAttribute('unique-id')).filter(id => id != null)
   const parentId = domNode.parentElement?.getAttribute('unique-id')
   const siblingIds = Array.from(domNode.parentElement?.children || []).map(sibling => sibling.getAttribute('unique-id')).filter(id => id !== nodeId).filter(id => id != null)
-  const borderInfo = getBorderInfo(domNode)
-  const paddingInfo = getPaddingInfo(domNode)
-  const backgroundColor = getBackgroundColor(domNode)
+  const borderInfo = getDomBorderInfo(domNode)
+  const paddingInfo = getDomPaddingInfo(domNode)
+  const backgroundColor = getDomBackgroundColor(domNode)
   const newNode: NodeInfo = {
     nodeName,
     uniqueId: nodeId,

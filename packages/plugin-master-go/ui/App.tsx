@@ -1,7 +1,13 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import { PluginMessage, sendMsgToPlugin, UIMessage } from '@messages/sender'
-import { getDesignInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, reOrderDesignNodes, searchNeighborNodes } from '@ui-differ/core'
-import { DESIGN_NODE_PREFIX } from '@ui-differ/core/dist/types'
+import {
+  DESIGN_NODE_PREFIX,
+  getDesignInfoRecorder,
+  processPaddingInfo,
+  removeSameSizePositionChildren,
+  reOrderDesignNodes,
+  searchNeighborNodes,
+} from '@ui-differ/core'
 import { useMemoizedFn } from 'ahooks'
 import { Button, message, Typography } from 'antd'
 import ClipboardJS from 'clipboard'

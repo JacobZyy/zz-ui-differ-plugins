@@ -6,7 +6,7 @@ import { convertDesignToPx } from './convert-design-to-px'
  * @param designNode 目标设计稿节点
  * @returns 内边距信息
  */
-export function getPaddingInfo(designNode: SceneNode): PaddingInfo {
+export function getDesignPaddingInfo(designNode: SceneNode): PaddingInfo {
   // 只有Frame节点开启自动布局的时候才会产生有效padding
   if (designNode.type !== 'FRAME' || designNode.flexMode !== 'NONE') {
     return {
@@ -33,7 +33,7 @@ export function getPaddingInfo(designNode: SceneNode): PaddingInfo {
  * @param dom 目标dom
  * @returns 背景色
  */
-export function getBackgroundColor(designNode: SceneNode) {
+export function getDesignBackgroundColor(designNode: SceneNode) {
   if (!('fills' in designNode) || !designNode.fills?.length) {
     return 'transparent'
   }
@@ -121,7 +121,7 @@ function getBorderColorInfo(designNode: SceneNode): BorderInfo['borderColor'] {
  * @param designNode 目标设计稿节点
  * @returns 边框信息
  */
-export function getBorderInfo(designNode: SceneNode): BorderInfo {
+export function getDesignBorderInfo(designNode: SceneNode): BorderInfo {
   return {
     borderWidth: getBorderWidthInfo(designNode),
     borderColor: getBorderColorInfo(designNode),

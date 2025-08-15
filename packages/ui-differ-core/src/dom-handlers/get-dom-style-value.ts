@@ -6,7 +6,7 @@ import type { BorderInfo, PaddingInfo } from '../types'
  * @param styleName 样式名
  * @returns 样式值
  */
-export function getPaddingInfo(dom: Element): PaddingInfo {
+export function getDomPaddingInfo(dom: Element): PaddingInfo {
   // 获取dom的计算样式
   const computedStyle = window.getComputedStyle(dom)
   // 获取transform矩阵
@@ -39,7 +39,7 @@ export function getPaddingInfo(dom: Element): PaddingInfo {
  * @param dom 目标dom
  * @returns 背景色
  */
-export function getBackgroundColor(dom: Element) {
+export function getDomBackgroundColor(dom: Element) {
   const computedStyle = window.getComputedStyle(dom)
   const image = computedStyle.getPropertyValue('background-image')
   if (image) {
@@ -59,7 +59,7 @@ export function getBackgroundColor(dom: Element) {
  * @param dom 目标dom
  * @returns 边框信息
  */
-export function getBorderInfo(dom: Element): BorderInfo {
+export function getDomBorderInfo(dom: Element): BorderInfo {
   const computedStyle = window.getComputedStyle(dom)
   const borderWidthLeft = Number(computedStyle.getPropertyValue('border-left-width').replace('px', '')) || 0
   const borderWidthRight = Number(computedStyle.getPropertyValue('border-right-width').replace('px', '')) || 0

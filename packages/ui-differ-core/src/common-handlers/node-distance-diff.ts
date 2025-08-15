@@ -1,7 +1,6 @@
 import type { DiffResultInfo, NodeInfo, UniqueId } from '../types'
 import { convertSiblingPositionToBoundingValue, currentNodeToSiblingPositionMap, SiblingPosition } from '../types'
-import { fixedSubstract } from '../utils/compare-distance'
-
+import { fixedSubstract } from '../utils'
 import { getSamePositionNode } from './get-same-position-node'
 
 function getTargetNeighborDistanceInfo(currentNodeInfo: NodeInfo, flatNodeMap: Map<UniqueId, NodeInfo>, diretcion: SiblingPosition) {

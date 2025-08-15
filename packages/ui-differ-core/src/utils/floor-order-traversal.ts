@@ -1,5 +1,5 @@
 import type { NodeInfo, NodeWithChild, UniqueId } from '../types'
-import { nodeNoChildSet } from '../types/'
+import { nodeNoChildSet } from '../types'
 
 /**
  * @description 层序遍历节点

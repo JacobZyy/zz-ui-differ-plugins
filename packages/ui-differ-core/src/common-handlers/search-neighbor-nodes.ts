@@ -1,7 +1,7 @@
 import type { BoundingRect, NodeInfo, UniqueId } from '../types'
 import { clone } from 'radash'
 import { currentNodeToSiblingPositionMap, SiblingPosition, validateSiblingPosList } from '../types'
-import { getNodePosition } from '../utils/get-node-position'
+import { getNodePosition } from '../utils'
 
 /** 寻找单个位置的兄弟节点配置 */
 interface FindSinglePositionSiblingConfig {

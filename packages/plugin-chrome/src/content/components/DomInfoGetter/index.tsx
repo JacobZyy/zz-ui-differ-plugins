@@ -1,7 +1,13 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
-import { onDomInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, searchNeighborNodes, SiblingPosition } from '@ui-differ/core'
+import {
+  DESIGN_NODE_PREFIX,
+  onDomInfoRecorder,
+  processPaddingInfo,
+  removeSameSizePositionChildren,
+  searchNeighborNodes,
+  SiblingPosition,
+} from '@ui-differ/core'
 import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
-import { DESIGN_NODE_PREFIX } from 'node_modules/@ui-differ/core/dist/types'
 import { useState } from 'react'
 import { ChromeMessageType } from '@/types'
 import { chromeMessageSender, generateScreenShot } from '@/utils'
@@ -22,7 +28,9 @@ export default function DomInfoGetter() {
         messageApi.warning('剪切板中没有设计稿信息')
         return
       }
-      return designNodeJSON.replace(DESIGN_NODE_PREFIX, '')
+      const result = designNodeJSON.replace(DESIGN_NODE_PREFIX, '')
+      console.log('🚀 ~ onReadingClipboard ~ result:', result)
+      return result
     }
     catch (error) {
       console.error(error)
@@ -37,6 +45,7 @@ export default function DomInfoGetter() {
   const handleGetClipboardContent = async () => {
     try {
       const designNodeJSON = await onReadingClipboard()
+      console.log('🚀 ~ handleGetClipboardContent ~ designNodeJSON:', designNodeJSON)
       if (!designNodeJSON)
         return
       const nodeList = JSON.parse(designNodeJSON)
@@ -157,8 +166,9 @@ export default function DomInfoGetter() {
     })
 
     const diffResult = nodeDistanceDiff(flatNodeMap, designNodeInfo)
+    console.log('🚀 ~ handleStartUiDiff ~ diffResult:', diffResult)
 
-    await handleGetScreenShot()
+    // await handleGetScreenShot()
   }
 
   return (
