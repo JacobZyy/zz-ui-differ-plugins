@@ -15,6 +15,8 @@ function processSingleDomNodeInfo(domNode: Element) {
     height: boundingRect.height,
   }
 
+  const nodeName = `.${Array.from(domNode.classList).join('.')}`
+
   // 获取子节点id
   const childrenIds = Array.from(domNode.children).map(child => child.getAttribute('unique-id')).filter(id => id != null)
   const parentId = domNode.parentElement?.getAttribute('unique-id')
@@ -23,6 +25,7 @@ function processSingleDomNodeInfo(domNode: Element) {
   const paddingInfo = getPaddingInfo(domNode)
   const backgroundColor = getBackgroundColor(domNode)
   const newNode: NodeInfo = {
+    nodeName,
     uniqueId: nodeId,
     boundingRect: realBoundingRect,
     parentId: parentId || '',

@@ -31,6 +31,7 @@ function replaceTargetPositionNode(sourceId: UniqueId, targetId: UniqueId, origi
 function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: NodeInfo) {
   // 合并父子节点信息
   const mergedNodeInfo: NodeInfo = {
+    nodeName: childNodeInfo.nodeName,
     uniqueId: childNodeInfo.uniqueId,
     children: childNodeInfo.children,
     boundingRect: childNodeInfo.boundingRect,

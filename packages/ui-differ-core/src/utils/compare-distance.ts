@@ -12,3 +12,16 @@ export function isSameDistance(firstVal: number, nextVal: number) {
 
   return !!fixedDiffVal
 }
+
+/**
+ * 计算两个值的差值，将结果四舍五入
+ * @param prevValue 第一个值
+ * @param nextValue 第二个值
+ * @returns 四舍五入后的差值
+ */
+export function fixedSubstract(prevValue: number, nextValue: number) {
+  const diff = prevValue - nextValue
+  // 四舍五入到整数
+  const fixedValue = Math.round(diff)
+  return fixedValue
+}

@@ -41,6 +41,7 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   /** 兄弟节点 id */
   sibling: UniqueId[]
   uniqueId: UniqueId
+  nodeName: string
   /** 节点边界 */
   boundingRect: BoundingRect
   /** padding信息 */

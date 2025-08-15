@@ -1,5 +1,5 @@
 import type { BorderInfo, PaddingInfo } from '../types'
-import { convertDesignToPx } from './convertDesignToPx'
+import { convertDesignToPx } from './convert-design-to-px'
 
 /**
  * 获取设计稿的内边距的值

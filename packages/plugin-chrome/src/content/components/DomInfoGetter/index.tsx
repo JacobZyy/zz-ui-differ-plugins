@@ -112,7 +112,6 @@ export default function DomInfoGetter() {
 
   /** 获取屏幕截图 */
   const handleGetScreenShot = async () => {
-    await new Promise(resolve => setTimeout(resolve, 1500))
     const { imgUrl: screenShot, width, height } = await generateScreenShot()
     return {
       screenShot,
@@ -156,6 +155,10 @@ export default function DomInfoGetter() {
         console.log('              🚀 ~ handleStartUiDiff ~ bottomDom:', bottomDom)
       }
     })
+
+    const diffResult = nodeDistanceDiff(flatNodeMap, designNodeInfo)
+
+    await handleGetScreenShot()
   }
 
   return (
@@ -195,4 +198,11 @@ export default function DomInfoGetter() {
       </Modal>
     </>
   )
+}
+function nodeDistanceDiff(flatNodeMap: Map<string, NodeInfo>, designNodeInfo: Map<string, NodeInfo>) {
+  throw new Error('Function not implemented.')
+}
+
+function generateDiffResult(diffResult: void) {
+  throw new Error('Function not implemented.')
 }

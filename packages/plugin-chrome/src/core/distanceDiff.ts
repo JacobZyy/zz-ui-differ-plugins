@@ -1,6 +1,5 @@
 import type { DiffResultInfo, DistanceInfo } from './type'
-import getDomDistanceInfo from './getDomDistanceInfo'
-import getSamePosMgNode from './getSamePosMgNode'
+import getSamePosMgNode from './getSamePosNode'
 import { SiblingNodeRelativePosition } from './type'
 
 function fixedSubstract(prevValue: number, nextValue: number) {
@@ -195,7 +194,7 @@ function handleCalculateDiffInfo(
   return diffResultInfo
 }
 
-export default function distanceDiff(mgDistanceInfoMap: Map<string, DistanceInfo>, rootDomNode: HTMLElement) {
+export default function distanceDiff(mgDistanceInfoMap: Map<string, DistanceInfo>, nodeRoot: HTMLElement) {
   const resultMap = new Map<string, DiffResultInfo>()
   const domDistanceInfo = getDomDistanceInfo(rootDomNode)
 

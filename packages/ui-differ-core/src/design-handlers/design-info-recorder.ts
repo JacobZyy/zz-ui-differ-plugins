@@ -1,7 +1,7 @@
 import type { BoundingRect, NodeInfo, NodeWithChild, UniqueId } from '../types'
 import { nodeWithChildSet } from '../types'
 import { floorOrderTraversalWithNode } from '../utils/floor-order-traversal'
-import { convertDesignToPx } from './convertDesignToPx'
+import { convertDesignToPx } from './convert-design-to-px'
 import { getBackgroundColor, getBorderInfo, getPaddingInfo } from './get-design-style-value'
 /** ios部分头的高度 */
 const PHONE_HEADER_HEIGHT = 88
@@ -35,6 +35,7 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
   const borderInfo = getBorderInfo(designNode)
   const backgroundColor = getBackgroundColor(designNode)
   const newNode: NodeInfo = {
+    nodeName: designNode.name,
     uniqueId: nodeId,
     boundingRect: realBoundingRect,
     parentId: parentId || '',

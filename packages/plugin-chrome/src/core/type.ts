@@ -19,9 +19,6 @@ export interface NodeBaseInfo {
 /** 节点距离信息 */
 export type DistanceInfo = DistanceInfoValues & NeighborInfo & NodeBaseInfo
 
-/** 设计稿默认宽度 */
-export const DESIGN_DEFAULT_WIDTH = 750
-
 export interface MarginInfo {
   left: number
   right: number
