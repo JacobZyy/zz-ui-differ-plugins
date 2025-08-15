@@ -1,59 +1,116 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import { onDomInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, searchNeighborNodes, SiblingPosition } from '@ui-differ/core'
-import { FloatButton, message, Modal, Spin } from 'antd'
-import { useEffect, useState } from 'react'
-import useDocumentWidth from '@/content/storage/useDocumentWidth'
-import { generateScreenShot } from '@/core/generateScreenShot'
+import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
+import { DESIGN_NODE_PREFIX } from 'node_modules/@ui-differ/core/dist/types'
+import { useState } from 'react'
+import { ChromeMessageType } from '@/types'
+import { chromeMessageSender, generateScreenShot } from '@/utils'
 import styles from './index.module.scss'
 import RootDetector from './RootDetector'
 
 export default function DomInfoGetter() {
-  // 控制 Modal 显示状态
+  const [messageApi, contextHolder] = message.useMessage({ maxCount: 1 })
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [designNodeInfo, setDesignNodeInfo] = useState<Record<UniqueId, NodeInfo>>({})
-  const setDocumentWidth = useDocumentWidth(state => state.setDocumentWidth)
-  const setRootFontSize = useDocumentWidth(state => state.setRootFontSize)
+  const [designNodeInfo, setDesignNodeInfo] = useState<Map<UniqueId, NodeInfo>>(new Map())
   const [clipboardLoading, setClipboardLoading] = useState(false)
 
+  /** 获取剪切板内容 */
   const onReadingClipboard = async () => {
     try {
       const designNodeJSON = await navigator.clipboard.readText()
-      return designNodeJSON
+      if (!designNodeJSON || !designNodeJSON.startsWith(DESIGN_NODE_PREFIX)) {
+        messageApi.warning('剪切板中没有设计稿信息')
+        return
+      }
+      return designNodeJSON.replace(DESIGN_NODE_PREFIX, '')
     }
     catch (error) {
       console.error(error)
-      message.error('剪切板读取信息失败，请查看权限设置')
+      messageApi.error('剪切板读取信息失败，请查看权限设置')
     }
     finally {
       setClipboardLoading(false)
     }
   }
 
-  // 打开 Modal
+  /** 剪切板内容转换成object */
+  const handleGetClipboardContent = async () => {
+    try {
+      const designNodeJSON = await onReadingClipboard()
+      if (!designNodeJSON)
+        return
+      const nodeList = JSON.parse(designNodeJSON)
+      if (!Array.isArray(nodeList)) {
+        messageApi.warning('设计稿节点不是一个List')
+      }
+
+      const entries = nodeList.map((item: NodeInfo) => [item.uniqueId, item] as const)
+      const designNodeInfo = new Map<UniqueId, NodeInfo>(entries)
+      setDesignNodeInfo(designNodeInfo)
+    }
+    catch (error) {
+      console.error(error)
+      messageApi.error('JSON解析失败')
+    }
+  }
+
+  /** 修改设备模拟 */
+  const handleChangeWindowSize = async () => {
+    try {
+      // 向background script发送修改窗口尺寸的消息
+      const response = await chromeMessageSender({ type: ChromeMessageType.CHANGE_WINDOW_SIZE, data: null })
+      if (!response?.success) {
+        messageApi.error(response?.message || '调用修改窗口尺寸API失败')
+        return
+      }
+      messageApi.success('修改窗口尺寸成功')
+    }
+    catch (error) {
+      console.error('调用设备模拟API失败:', error)
+      messageApi.error('调用设备模拟API失败')
+    }
+  }
+
+  /** 重置设备模拟 */
+  const handleResetDeviceEmulation = async () => {
+    try {
+      // 向background script发送重置设备模拟的消息
+      const response = await chromeMessageSender({ type: ChromeMessageType.RESET_DEVICE_EMULATION, data: null })
+      if (!response?.success) {
+        messageApi.error(response?.message || '调用重置设备模拟API失败')
+        return
+      }
+      messageApi.success('重置设备模拟成功')
+    }
+    catch (error) {
+      console.error('调用重置设备模拟API失败:', error)
+      messageApi.error('调用重置设备模拟API失败')
+    }
+  }
+
+  /** 打开 情况弹窗 */
   const handleOpenModal = async () => {
     try {
       setIsModalOpen(true)
       setClipboardLoading(true)
-      // const designNodeJSON = await onReadingClipboard()
-      // if (!designNodeJSON)
-      //   return
-      // setDesignNodeInfo(JSON.parse(designNodeJSON))
-      // setClipboardLoading(false)
+      // await handleChangeWindowSize()
+      // await handleGetClipboardContent()
     }
     catch (error) {
       console.error(error)
-      message.error('无效的json，请确认复制的节点内容')
+      messageApi.error('无效的json，请确认复制的节点内容')
     }
     finally {
       setClipboardLoading(false)
     }
   }
 
-  // 关闭 Modal
+  /** 关闭 情况弹窗 */
   const handleCloseModal = () => {
     setIsModalOpen(false)
   }
 
+  /** 获取屏幕截图 */
   const handleGetScreenShot = async () => {
     await new Promise(resolve => setTimeout(resolve, 1500))
     const { imgUrl: screenShot, width, height } = await generateScreenShot()
@@ -63,6 +120,7 @@ export default function DomInfoGetter() {
     }
   }
 
+  /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
     const initiedFlatNodeMap = onDomInfoRecorder(rootNode)
     const rootNodeId = rootNode.getAttribute('unique-id') || ''
@@ -100,18 +158,9 @@ export default function DomInfoGetter() {
     })
   }
 
-  const handleInitRemInfo = () => {
-    const fontSize = document.documentElement.style.fontSize.replace('px', '')
-    setDocumentWidth(document.documentElement.clientWidth)
-    setRootFontSize(Number(fontSize) || 16)
-  }
-
-  useEffect(() => {
-    handleInitRemInfo()
-  }, [])
-
   return (
     <>
+      {contextHolder}
       <FloatButton
         className={styles.floatButton}
         icon={<span className="ui-differ-icon" />}
@@ -131,6 +180,17 @@ export default function DomInfoGetter() {
       >
         <Spin spinning={clipboardLoading} tip="读取剪切板信息中...">
           <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+          <Flex gap={4} wrap>
+            <Button variant="filled" color="cyan" onClick={handleResetDeviceEmulation}>
+              重置设备模拟
+            </Button>
+            <Button variant="filled" color="gold" onClick={handleChangeWindowSize}>
+              调整设备模拟
+            </Button>
+            <Button variant="filled" color="lime" onClick={handleGetClipboardContent}>
+              获取剪切板内容
+            </Button>
+          </Flex>
         </Spin>
       </Modal>
     </>

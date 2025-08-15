@@ -1,4 +1,5 @@
 import type { BorderInfo, PaddingInfo } from '../types'
+import { convertDesignToPx } from './convertDesignToPx'
 
 /**
  * 获取设计稿的内边距的值
@@ -15,10 +16,10 @@ export function getPaddingInfo(designNode: SceneNode): PaddingInfo {
       paddingBottom: 0,
     }
   }
-  const paddingLeft = designNode.paddingLeft
-  const paddingRight = designNode.paddingRight
-  const paddingTop = designNode.paddingTop
-  const paddingBottom = designNode.paddingBottom
+  const paddingLeft = convertDesignToPx(designNode.paddingLeft)
+  const paddingRight = convertDesignToPx(designNode.paddingRight)
+  const paddingTop = convertDesignToPx(designNode.paddingTop)
+  const paddingBottom = convertDesignToPx(designNode.paddingBottom)
   return {
     paddingLeft,
     paddingRight,
@@ -66,18 +67,18 @@ function getBorderWidthInfo(designNode: SceneNode): BorderInfo['borderWidth'] {
   if (designNode.type === 'FRAME' || designNode.type === 'RECTANGLE' || designNode.type === 'INSTANCE' || designNode.type === 'COMPONENT' || designNode.type === 'COMPONENT_SET') {
     // 有单独的边框宽度，返回对应的边框宽度
     return {
-      borderWidthLeft: designNode.strokeTopWeight,
-      borderWidthRight: designNode.strokeRightWeight,
-      borderWidthTop: designNode.strokeTopWeight,
-      borderWidthBottom: designNode.strokeBottomWeight,
+      borderWidthLeft: convertDesignToPx(designNode.strokeTopWeight),
+      borderWidthRight: convertDesignToPx(designNode.strokeRightWeight),
+      borderWidthTop: convertDesignToPx(designNode.strokeTopWeight),
+      borderWidthBottom: convertDesignToPx(designNode.strokeBottomWeight),
     }
   }
   // 其他节点，返回统一的边框宽度
   return {
-    borderWidthLeft: designNode.strokeWeight,
-    borderWidthRight: designNode.strokeWeight,
-    borderWidthTop: designNode.strokeWeight,
-    borderWidthBottom: designNode.strokeWeight,
+    borderWidthLeft: convertDesignToPx(designNode.strokeWeight),
+    borderWidthRight: convertDesignToPx(designNode.strokeWeight),
+    borderWidthTop: convertDesignToPx(designNode.strokeWeight),
+    borderWidthBottom: convertDesignToPx(designNode.strokeWeight),
   }
 }
 

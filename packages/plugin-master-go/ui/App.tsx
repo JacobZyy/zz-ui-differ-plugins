@@ -1,6 +1,7 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import { PluginMessage, sendMsgToPlugin, UIMessage } from '@messages/sender'
 import { getDesignInfoRecorder, processPaddingInfo, removeSameSizePositionChildren, reOrderDesignNodes, searchNeighborNodes } from '@ui-differ/core'
+import { DESIGN_NODE_PREFIX } from '@ui-differ/core/dist/types'
 import { useMemoizedFn } from 'ahooks'
 import { Button, message, Typography } from 'antd'
 import ClipboardJS from 'clipboard'
@@ -59,7 +60,7 @@ function App() {
 
   const selectedNodeJson = JSON.stringify(selectedNode, null, 2)
 
-  const copyText = `~$$MASTER_GO_UI_DIFFER_NODE_INFO$$~${JSON.stringify(Object.values(selectedNode), null, 2)}`
+  const copyText = `${DESIGN_NODE_PREFIX}${JSON.stringify(Object.values(selectedNode), null, 2)}`
 
   return (
     <div className="app">

@@ -8,23 +8,26 @@ const messageHandlerMap: Record<ChromeMessageType, ChromeListenerMsgProcessor> =
   [ChromeMessageType.RESET_DEVICE_EMULATION]: handleResetDeviceEmulation,
 }
 
-export async function handleContentMessage(message: ChromeListenerMessageType, sender: chrome.runtime.MessageSender, sendResponse: ResponseSenderCallback) {
+export async function handleContentMessage(message: ChromeListenerMessageType, sender: chrome.runtime.MessageSender, sendResponse: ResponseSenderCallback): Promise<boolean> {
   const processor = messageHandlerMap[message.type]
   if (!processor) {
-    return sendResponse({ success: false, message: '未找到消息处理器', data: null })
+    sendResponse({ success: false, message: '未找到消息处理器', data: null })
+    return true
   }
 
   try {
     // 异步处理消息，保持端口开放
     const response = await processor({ message, sender })
-    return sendResponse(response)
+    console.log('🚀 ~ handleContentMessage ~ response:', response)
+    sendResponse(response)
+    return true
   }
   catch (error) {
-    console.error('消息处理失败:', error)
-    return sendResponse({
+    sendResponse({
       success: false,
       message: error instanceof Error ? error.message : '消息处理失败',
       data: null,
     })
+    return true
   }
 }

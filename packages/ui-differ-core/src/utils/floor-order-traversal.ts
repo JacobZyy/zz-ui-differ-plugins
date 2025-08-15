@@ -1,6 +1,5 @@
-import type { NodeInfo, UniqueId } from '../types'
-import type { NodeWithChild } from '../types/designNode'
-import { nodeNoChildSet } from '../types/designNode'
+import type { NodeInfo, NodeWithChild, UniqueId } from '../types'
+import { nodeNoChildSet } from '../types/'
 
 /**
  * @description 层序遍历节点

@@ -1,5 +1,12 @@
 import type { NodeInfo } from '../types'
 
+/**
+ * TODO: 添加根据相邻节点的offset修正当前节点的信息的功能
+ * @description 根据节点的绝对位置信息，匹配HTML节点与设计稿节点
+ * @param currentNodeInfo
+ * @param mgNodeInfoMap
+ * @returns
+ */
 export function getSamePositionNode(currentNodeInfo: NodeInfo, mgNodeInfoMap: Map<string, NodeInfo>) {
   const entries = Array.from(mgNodeInfoMap.entries())
   let minDistance = Number.MAX_SAFE_INTEGER

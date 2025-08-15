@@ -64,9 +64,26 @@ export const invalidSiblingPositionSet = new Set([
 ])
 
 /** 当前节点与兄弟节点之间的位置映射 */
-export const currentNodeToSiblingPositionMap: Partial<Record<SiblingPosition, SiblingPosition>> = {
+export const currentNodeToSiblingPositionMap: Record<SiblingPosition, SiblingPosition> = {
   [SiblingPosition.TOP]: SiblingPosition.BOTTOM,
   [SiblingPosition.BOTTOM]: SiblingPosition.TOP,
   [SiblingPosition.LEFT]: SiblingPosition.RIGHT,
   [SiblingPosition.RIGHT]: SiblingPosition.LEFT,
+  [SiblingPosition.TOP_LEFT]: SiblingPosition.BOTTOM_RIGHT,
+  [SiblingPosition.TOP_RIGHT]: SiblingPosition.BOTTOM_LEFT,
+  [SiblingPosition.BOTTOM_LEFT]: SiblingPosition.TOP_RIGHT,
+  [SiblingPosition.BOTTOM_RIGHT]: SiblingPosition.TOP_LEFT,
+  [SiblingPosition.NONE]: SiblingPosition.NONE,
+}
+
+export const convertSiblingPositionToBoundingValue: Record<SiblingPosition, (keyof BoundingRect)[]> = {
+  [SiblingPosition.TOP]: ['y'],
+  [SiblingPosition.BOTTOM]: ['y', 'height'],
+  [SiblingPosition.LEFT]: ['x'],
+  [SiblingPosition.RIGHT]: ['x', 'width'],
+  [SiblingPosition.TOP_LEFT]: [],
+  [SiblingPosition.TOP_RIGHT]: [],
+  [SiblingPosition.BOTTOM_LEFT]: [],
+  [SiblingPosition.BOTTOM_RIGHT]: [],
+  [SiblingPosition.NONE]: [],
 }
