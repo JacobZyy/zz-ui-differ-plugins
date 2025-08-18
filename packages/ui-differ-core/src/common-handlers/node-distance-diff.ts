@@ -1,7 +1,25 @@
 import type { DiffResultInfo, NodeInfo, UniqueId } from '../types'
-import { convertSiblingPositionToBoundingValue, currentNodeToSiblingPositionMap, SiblingPosition } from '../types'
+import { convertPositionToBoundingKeys, currentNodeToSiblingPositionMap, SiblingPosition } from '../types'
 import { fixedSubstract } from '../utils'
 import { getSamePositionNode } from './get-same-position-node'
+
+function getIsSiblingOrParents(currentNodeInfo: NodeInfo, targetNodeId: UniqueId, flatNodeMap: Map<UniqueId, NodeInfo>): 'sibling' | 'parent' {
+  const siblingSet = new Set(currentNodeInfo.sibling)
+  const isSibling = siblingSet.has(targetNodeId)
+  const isParent = currentNodeInfo.parentId === targetNodeId
+
+  if (isParent) {
+    return 'parent'
+  }
+  if (isSibling) {
+    return 'sibling'
+  }
+  const parentNode = flatNodeMap.get(currentNodeInfo.parentId)
+  if (!currentNodeInfo.parentId || !parentNode) {
+    return 'parent'
+  }
+  return getIsSiblingOrParents(parentNode, targetNodeId, flatNodeMap)
+}
 
 function getTargetNeighborDistanceInfo(currentNodeInfo: NodeInfo, flatNodeMap: Map<UniqueId, NodeInfo>, diretcion: SiblingPosition) {
   const { [diretcion]: targetKeys } = currentNodeInfo
@@ -11,9 +29,13 @@ function getTargetNeighborDistanceInfo(currentNodeInfo: NodeInfo, flatNodeMap: M
   }
   const curBoundingRect = currentNodeInfo.boundingRect
   const neighborBoundingRect = targetNeighbor.boundingRect
-  const neighborDirection = currentNodeToSiblingPositionMap[diretcion]
-  const curNodeBoundingKeys = convertSiblingPositionToBoundingValue[diretcion]
-  const neighborBoundingKeys = convertSiblingPositionToBoundingValue[neighborDirection]
+  const curNodeBoundingKeys = convertPositionToBoundingKeys[diretcion]
+
+  const neighborType = getIsSiblingOrParents(currentNodeInfo, targetKeys, flatNodeMap)
+
+  // 如果和父节点比，则直接用当前位置的值， 和兄弟节点相比，则用映射值
+  const neighborDirection = neighborType === 'parent' ? diretcion : currentNodeToSiblingPositionMap[diretcion]
+  const neighborBoundingKeys = convertPositionToBoundingKeys[neighborDirection]
   const curNodePosValue = curNodeBoundingKeys.reduce((acc, key) => acc + curBoundingRect[key], 0)
   const neighborNodePosValue = neighborBoundingKeys.reduce((acc, key) => acc + neighborBoundingRect[key], 0)
   return Math.abs(curNodePosValue - neighborNodePosValue)
@@ -64,7 +86,7 @@ export function nodeDistanceDiff(domNodeInfo: Map<UniqueId, NodeInfo>, mgNodeInf
         originNodeInfo: currentDomNode,
         designNodeInfo,
       }
-      console.log(`🚀 对比节点:${diffResultInfo.designNodeInfo.nodeName}\n`, '对应的dom:\n', currentEl, '比对结果：', diffResultInfo)
+      console.log(`🚀 对比节点:${diffResultInfo.designNodeInfo.nodeName}\n`, '节点id', currentDomNodeId, '\n对应的dom:', currentEl, '\n比对结果：', diffResultInfo)
       return [currentDomNodeId, diffResultInfo] as const
     })
     .filter(entry => entry != null)

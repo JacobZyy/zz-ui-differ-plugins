@@ -77,7 +77,7 @@ export const currentNodeToSiblingPositionMap: Record<SiblingPosition, SiblingPos
   [SiblingPosition.NONE]: SiblingPosition.NONE,
 }
 
-export const convertSiblingPositionToBoundingValue: Record<SiblingPosition, (keyof BoundingRect)[]> = {
+export const convertPositionToBoundingKeys: Record<SiblingPosition, (keyof BoundingRect)[]> = {
   [SiblingPosition.TOP]: ['y'],
   [SiblingPosition.BOTTOM]: ['y', 'height'],
   [SiblingPosition.LEFT]: ['x'],

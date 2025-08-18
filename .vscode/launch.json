@@ -9,9 +9,9 @@
       "request": "launch",
       "runtimeArgs": [
         "run-script",
-        "dev"
+        "single-fn-test:watch"
       ],
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "pnpm",
       "skipFiles": [
         "<node_internals>/**"
       ],

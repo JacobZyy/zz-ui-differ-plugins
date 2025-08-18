@@ -8,7 +8,7 @@ import { convertDesignToPx } from './convert-design-to-px'
  */
 export function getDesignPaddingInfo(designNode: SceneNode): PaddingInfo {
   // 只有Frame节点开启自动布局的时候才会产生有效padding
-  if (designNode.type !== 'FRAME' || designNode.flexMode !== 'NONE') {
+  if (designNode.type !== 'FRAME' || designNode.flexMode === 'NONE') {
     return {
       paddingLeft: 0,
       paddingRight: 0,

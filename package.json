@@ -21,7 +21,8 @@
     "dev:chrome": "pnpm --filter @ui-differ/plugin-chrome dev",
     "dev:mastergo": "pnpm --filter @ui-differ/plugin-master-go dev",
     "clean": "pnpm -r clean",
-    "clean:modules": "pnpm -r clean:modules && rm -rf node_modules"
+    "clean:modules": "pnpm -r clean:modules && rm -rf node_modules",
+    "single-fn-test:watch": "tsx test.ts --watch"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",

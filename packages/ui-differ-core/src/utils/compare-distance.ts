@@ -10,7 +10,8 @@ export function isSameDistance(firstVal: number, nextVal: number) {
 
   const fixedDiffVal = Math.round(diff)
 
-  return !!fixedDiffVal
+  // 返回值为0即为同一个数值
+  return !fixedDiffVal
 }
 
 /**

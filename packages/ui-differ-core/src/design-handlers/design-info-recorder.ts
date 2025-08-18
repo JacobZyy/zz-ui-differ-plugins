@@ -3,12 +3,13 @@ import { nodeWithChildSet } from '../types'
 import { floorOrderTraversalWithNode } from '../utils'
 import { convertDesignToPx } from './convert-design-to-px'
 import { getDesignBackgroundColor, getDesignBorderInfo, getDesignPaddingInfo } from './get-design-style-value'
+import { getParentSiblingNodes } from './get-parent-sibling-nodes'
 /** ios部分头的高度 */
 const PHONE_HEADER_HEIGHT = 88
 /** ios底部安全距离的高度 */
 export const SAFE_BOTTOM_HEIGHT = 68
 
-function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: number, y: number, id: UniqueId }) {
+function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: number, y: number, id: UniqueId }, designNodeParentSiblingMap: Map<UniqueId, Pick<NodeInfo, 'parentId' | 'sibling'>>) {
   const nodeId = designNode.id
   // 在上方已经进行过滤了
   const boundingRect = designNode.absoluteRenderBounds!
@@ -24,21 +25,25 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
   if (nodeId === rootOffset.id) {
     // 根节点，top置为0，height减去上下安全距离
     realBoundingRect.y = 0
-    realBoundingRect.height -= (PHONE_HEADER_HEIGHT + SAFE_BOTTOM_HEIGHT)
+    realBoundingRect.height -= convertDesignToPx((PHONE_HEADER_HEIGHT + SAFE_BOTTOM_HEIGHT))
   }
   const hasChildren = nodeWithChildSet.has(designNode.type)
   // 获取子节点id
   const childrenIds = hasChildren ? Array.from((designNode as NodeWithChild).children).map(child => child.id) : []
-  const parentId = designNode.parent?.id
-  const siblingIds = Array.from(designNode.parent?.children || []).map(sibling => sibling.id).filter(id => id !== nodeId)
   const paddingInfo = getDesignPaddingInfo(designNode)
+  if (designNode.name === 'card2') {
+    console.log('🚀 ~ processSingleDesignNodeInfo ~ paddingInfo:', paddingInfo, designNode)
+  }
   const borderInfo = getDesignBorderInfo(designNode)
   const backgroundColor = getDesignBackgroundColor(designNode)
+  const siblingParentInfo = designNodeParentSiblingMap.get(nodeId)
+  const parentId = siblingParentInfo?.parentId || ''
+  const siblingIds = siblingParentInfo?.sibling || []
   const newNode: NodeInfo = {
     nodeName: designNode.name,
     uniqueId: nodeId,
     boundingRect: realBoundingRect,
-    parentId: parentId || '',
+    parentId,
     children: childrenIds,
     sibling: siblingIds,
     paddingInfo,
@@ -50,7 +55,6 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
 
 export function getDesignInfoRecorder(rootDesignNode: SceneNode) {
   const floorOrderNodeList = Array.from(floorOrderTraversalWithNode(rootDesignNode))
-  console.log('🚀 ~ getDesignInfoRecorder ~ floorOrderNodeList:', floorOrderNodeList)
   const rootDesignNodeBoundingRect = rootDesignNode.absoluteRenderBounds
   const rootNodeBoundingOffset = {
     x: rootDesignNodeBoundingRect?.x || 0,
@@ -58,6 +62,8 @@ export function getDesignInfoRecorder(rootDesignNode: SceneNode) {
     height: rootDesignNodeBoundingRect?.height || 0,
     id: rootDesignNode.id,
   }
+
+  const designNodeParentSiblingMap = getParentSiblingNodes(rootDesignNode)
 
   const flatNodeMapEntries = floorOrderNodeList
     .filter((designNode) => {
@@ -69,13 +75,11 @@ export function getDesignInfoRecorder(rootDesignNode: SceneNode) {
       const currentY = realBoundingRect.y - rootNodeBoundingOffset.y
       const isOverTopNode = currentY + realBoundingRect.height <= PHONE_HEADER_HEIGHT
       const isOverBottomNode = currentY >= (rootDesignNode.height - SAFE_BOTTOM_HEIGHT)
-      console.log('🚀 ~ getDesignInfoRecorder ~ currentY:', designNode.name, currentY, realBoundingRect.height, isOverTopNode, isOverBottomNode)
       return (!isOverTopNode && !isOverBottomNode) || designNode.id === rootDesignNode.id
     })
-    .map((designNode, index) => {
-      console.log(`🚀 ${index + 1} ~ getDesignInfoRecorder ~ designNode:`, designNode)
+    .map((designNode) => {
       // 格式化节点信息
-      const nodeInfo = processSingleDesignNodeInfo(designNode, rootNodeBoundingOffset)
+      const nodeInfo = processSingleDesignNodeInfo(designNode, rootNodeBoundingOffset, designNodeParentSiblingMap)
       return [nodeInfo.uniqueId, nodeInfo] as const
     })
 

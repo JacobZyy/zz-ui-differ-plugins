@@ -9,9 +9,10 @@ import {
   searchNeighborNodes,
 } from '@ui-differ/core'
 import { useMemoizedFn } from 'ahooks'
-import { Button, message, Typography } from 'antd'
+import { Button, message } from 'antd'
 import ClipboardJS from 'clipboard'
 import { useEffect, useState } from 'react'
+import ReactJson from 'react-json-view'
 import './App.css'
 
 function App() {
@@ -35,6 +36,9 @@ function App() {
       const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
       // 搜索邻居节点
       const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+      flatNodeMap.forEach((nodeInfo) => {
+        console.log('🚀 ~ nodeInfo:', nodeInfo.nodeName, nodeInfo.parentId, nodeInfo.sibling)
+      })
 
       setSelectedNode(Object.fromEntries(flatNodeMap.entries()))
     }
@@ -65,20 +69,14 @@ function App() {
     return () => window.removeEventListener('message', messageHandler)
   }, [])
 
-  const selectedNodeJson = JSON.stringify(selectedNode, null, 2)
-
   const copyText = `${DESIGN_NODE_PREFIX}${JSON.stringify(Object.values(selectedNode), null, 2)}`
 
   return (
     <div className="app">
-      <Typography>
-        <Button variant="filled" color="geekblue" className="copy-btn" data-clipboard-text={copyText}>
-          复制节点信息
-        </Button>
-        <pre>
-          {selectedNodeJson}
-        </pre>
-      </Typography>
+      <Button variant="filled" color="geekblue" className="copy-btn" data-clipboard-text={copyText}>
+        复制节点信息
+      </Button>
+      <ReactJson src={selectedNode} />
     </div>
   )
 }

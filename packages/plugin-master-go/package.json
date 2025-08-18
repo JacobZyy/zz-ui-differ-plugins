@@ -17,7 +17,8 @@
   "dependencies": {
     "@mastergo/plugin-typings": "^2.2.0",
     "@ui-differ/core": "workspace:^",
-    "clipboard": "^2.0.11"
+    "clipboard": "^2.0.11",
+    "react-json-view": "^1.21.3"
   },
   "devDependencies": {
     "@babel/core": "^7.17.5",

@@ -42,7 +42,7 @@ export function getDomPaddingInfo(dom: Element): PaddingInfo {
 export function getDomBackgroundColor(dom: Element) {
   const computedStyle = window.getComputedStyle(dom)
   const image = computedStyle.getPropertyValue('background-image')
-  if (image) {
+  if (image && image !== 'none') {
     return 'background-image'
   }
   const color = computedStyle.getPropertyValue('background-color')

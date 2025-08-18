@@ -171,6 +171,26 @@ export default function DomInfoGetter() {
     // await handleGetScreenShot()
   }
 
+  const handleTestDomNodeProcessor = (rootNode: HTMLElement) => {
+    const initiedFlatNodeMap = onDomInfoRecorder(rootNode)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ initiedFlatNodeMap:', initiedFlatNodeMap)
+    const rootNodeId = rootNode.getAttribute('unique-id') || ''
+    const rootNodeInfo = initiedFlatNodeMap.get(rootNodeId)
+    if (!rootNodeInfo) {
+      console.error('rootNode has no unique-id')
+      return
+    }
+    // 合并无效padding
+    const paddingMergedFlatNodeMap = processPaddingInfo(initiedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
+    // 移除相同尺寸、位置的子节点
+    const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenFlatNodeMap:', removedSameSizePositionChildrenFlatNodeMap)
+    // 搜索邻居节点
+    const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap:', flatNodeMap)
+  }
+
   return (
     <>
       {contextHolder}
@@ -192,7 +212,7 @@ export default function DomInfoGetter() {
         destroyOnHidden
       >
         <Spin spinning={clipboardLoading} tip="读取剪切板信息中...">
-          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} onTestDomNodeProcessor={handleTestDomNodeProcessor} />
           <Flex gap={4} wrap>
             <Button variant="filled" color="cyan" onClick={handleResetDeviceEmulation}>
               重置设备模拟
