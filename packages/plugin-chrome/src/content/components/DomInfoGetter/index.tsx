@@ -1,11 +1,11 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import {
   DESIGN_NODE_PREFIX,
+  nodeDistanceDiff,
   onDomInfoRecorder,
   processPaddingInfo,
   removeSameSizePositionChildren,
   searchNeighborNodes,
-  SiblingPosition,
 } from '@ui-differ/core'
 import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
 import { useState } from 'react'
@@ -144,26 +144,26 @@ export default function DomInfoGetter() {
     // 搜索邻居节点
     const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
 
-    flatNodeMap.forEach((value, key) => {
-      const currentDom = document.querySelector(`[unique-id="${key}"]`)
-      console.log('🚀 ~ handleStartUiDiff ~ currentDom:', currentDom)
-      const topDom = document.querySelector(`[unique-id="${value[SiblingPosition.TOP]}"]`)
-      if (topDom) {
-        console.log('             🚀 ~ handleStartUiDiff ~ topDom:', topDom)
-      }
-      const leftDom = document.querySelector(`[unique-id="${value[SiblingPosition.LEFT]}"]`)
-      if (leftDom) {
-        console.log('             🚀 ~ handleStartUiDiff ~ leftDom:', leftDom)
-      }
-      const rightDom = document.querySelector(`[unique-id="${value[SiblingPosition.RIGHT]}"]`)
-      if (rightDom) {
-        console.log('             🚀 ~ handleStartUiDiff ~ rightDom:', rightDom)
-      }
-      const bottomDom = document.querySelector(`[unique-id="${value[SiblingPosition.BOTTOM]}"]`)
-      if (bottomDom) {
-        console.log('              🚀 ~ handleStartUiDiff ~ bottomDom:', bottomDom)
-      }
-    })
+    // flatNodeMap.forEach((value, key) => {
+    //   const currentDom = document.querySelector(`[unique-id="${key}"]`)
+    //   console.log('🚀 ~ handleStartUiDiff ~ currentDom:', currentDom)
+    //   const topDom = document.querySelector(`[unique-id="${value[SiblingPosition.TOP]}"]`)
+    //   if (topDom) {
+    //     console.log('             🚀 ~ handleStartUiDiff ~ topDom:', topDom)
+    //   }
+    //   const leftDom = document.querySelector(`[unique-id="${value[SiblingPosition.LEFT]}"]`)
+    //   if (leftDom) {
+    //     console.log('             🚀 ~ handleStartUiDiff ~ leftDom:', leftDom)
+    //   }
+    //   const rightDom = document.querySelector(`[unique-id="${value[SiblingPosition.RIGHT]}"]`)
+    //   if (rightDom) {
+    //     console.log('             🚀 ~ handleStartUiDiff ~ rightDom:', rightDom)
+    //   }
+    //   const bottomDom = document.querySelector(`[unique-id="${value[SiblingPosition.BOTTOM]}"]`)
+    //   if (bottomDom) {
+    //     console.log('              🚀 ~ handleStartUiDiff ~ bottomDom:', bottomDom)
+    //   }
+    // })
 
     const diffResult = nodeDistanceDiff(flatNodeMap, designNodeInfo)
     console.log('🚀 ~ handleStartUiDiff ~ diffResult:', diffResult)
@@ -208,11 +208,4 @@ export default function DomInfoGetter() {
       </Modal>
     </>
   )
-}
-function nodeDistanceDiff(flatNodeMap: Map<string, NodeInfo>, designNodeInfo: Map<string, NodeInfo>) {
-  throw new Error('Function not implemented.')
-}
-
-function generateDiffResult(diffResult: void) {
-  throw new Error('Function not implemented.')
 }

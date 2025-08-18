@@ -1,8 +1,8 @@
 import { PluginMessage, UIMessage } from '@messages/sender'
 
 mg.showUI(__html__, {
-  width: 860,
-  height: 1000,
+  width: 400,
+  height: 800,
 })
 
 function sendSelectionToUI() {

@@ -24,8 +24,9 @@ export function nodeDistanceDiff(domNodeInfo: Map<UniqueId, NodeInfo>, mgNodeInf
     .map(([currentDomNodeId, currentDomNode]) => {
       const targetDeisignNodeId = getSamePositionNode(currentDomNode, mgNodeInfo)
       const designNodeInfo = mgNodeInfo.get(targetDeisignNodeId)
+      const currentEl = document.querySelector(`[unique-id="${currentDomNodeId}"]`)
       if (!targetDeisignNodeId || !designNodeInfo) {
-        console.error(`当前节点${currentDomNodeId}在mg中没有找到相同位置的节点`, designNodeInfo, mgNodeInfo)
+        console.error(`当前节点`, currentEl, `在mg中没有找到相同位置的节点`, designNodeInfo, mgNodeInfo)
         return null
       }
 
@@ -54,14 +55,16 @@ export function nodeDistanceDiff(domNodeInfo: Map<UniqueId, NodeInfo>, mgNodeInf
           top: curNodeTopMargin,
           bottom: curNodeBottomMargin,
         },
-        originBoundingRect: currentDomNode.boundingRect,
-        originWidth: currentDomNode.boundingRect.width,
-        originHeight: currentDomNode.boundingRect.height,
-        designNodeName: designNodeInfo.nodeName,
-        designNodeId: designNodeInfo.uniqueId,
-        uniqueId: currentDomNodeId,
-        nodeName: currentDomNode.nodeName,
+        designMarginInfo: {
+          left: designNodeLeftMargin,
+          right: designNodeRightMargin,
+          top: designNodeTopMargin,
+          bottom: designNodeBottomMargin,
+        },
+        originNodeInfo: currentDomNode,
+        designNodeInfo,
       }
+      console.log(`🚀 对比节点:${diffResultInfo.designNodeInfo.nodeName}\n`, '对应的dom:\n', currentEl, '比对结果：', diffResultInfo)
       return [currentDomNodeId, diffResultInfo] as const
     })
     .filter(entry => entry != null)

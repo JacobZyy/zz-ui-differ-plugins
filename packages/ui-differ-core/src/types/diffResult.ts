@@ -1,4 +1,4 @@
-import type { BoundingRect, UniqueId } from './node'
+import type { NodeInfo } from './node'
 
 export interface MarginInfo {
   left: number
@@ -15,17 +15,20 @@ export interface DiffResultInfo {
   diffMarginInfo: MarginInfo
   /** 原dom的边距 */
   originMarginInfo: MarginInfo
-  /** 原dom节点信息 */
-  originBoundingRect: BoundingRect
-  /** 原节点宽高 */
-  originWidth: number
-  originHeight: number
-  /** 设计稿节点名称 */
-  designNodeName: string
-  /** 设计稿节点Id */
-  designNodeId: UniqueId
-  /** 当前节点Id */
-  uniqueId: UniqueId
-  /** 当前节点名称 */
-  nodeName: string
+  designMarginInfo: MarginInfo
+  // /** 原dom节点信息 */
+  // originBoundingRect: BoundingRect
+  // /** 原节点宽高 */
+  // originWidth: number
+  // originHeight: number
+  // /** 设计稿节点名称 */
+  // designNodeName: string
+  // /** 设计稿节点Id */
+  // designNodeId: UniqueId
+  // /** 当前节点Id */
+  // uniqueId: UniqueId
+  // /** 当前节点名称 */
+  // nodeName: string
+  originNodeInfo: NodeInfo
+  designNodeInfo: NodeInfo
 }

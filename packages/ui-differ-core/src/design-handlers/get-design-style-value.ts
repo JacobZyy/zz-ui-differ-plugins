@@ -45,7 +45,7 @@ export function getDesignBackgroundColor(designNode: SceneNode) {
   if (!a) {
     return 'transparent'
   }
-  return `rgba(${r}, ${g}, ${b}, ${a})`
+  return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`
 }
 
 /**
@@ -107,7 +107,7 @@ function getBorderColorInfo(designNode: SceneNode): BorderInfo['borderColor'] {
     }
   }
   const { r, g, b, a } = strokeFill.color
-  const color = `rgba(${r}, ${g}, ${b}, ${a})`
+  const color = `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`
   return {
     borderColorLeft: color,
     borderColorRight: color,

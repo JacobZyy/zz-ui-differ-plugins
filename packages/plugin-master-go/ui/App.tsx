@@ -26,6 +26,7 @@ function App() {
       }
       // 初始化设计稿节点信息
       const initialFlatNodeMap = getDesignInfoRecorder(data[0])
+      console.log('🚀 ~ App ~ initialFlatNodeMap:', initialFlatNodeMap)
       // 重新排序设计稿节点
       const reorderedFlatNodeMap = reOrderDesignNodes(initialFlatNodeMap)
       // 合并无效padding

@@ -24,6 +24,7 @@ export function getSamePositionNode(currentNodeInfo: NodeInfo, mgNodeInfoMap: Ma
       (x - mgX) ** 2
       + (y - mgY) ** 2,
     )
+    console.log(`🚀 ~ getSamePositionNode ~ positionDistance: ${mgNodeInfo.nodeName}`, positionDistance)
 
     const sizeDistance = Math.sqrt(
       (width - mgWidth) ** 2

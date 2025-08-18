@@ -50,10 +50,12 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
 
 export function getDesignInfoRecorder(rootDesignNode: SceneNode) {
   const floorOrderNodeList = Array.from(floorOrderTraversalWithNode(rootDesignNode))
+  console.log('🚀 ~ getDesignInfoRecorder ~ floorOrderNodeList:', floorOrderNodeList)
   const rootDesignNodeBoundingRect = rootDesignNode.absoluteRenderBounds
   const rootNodeBoundingOffset = {
     x: rootDesignNodeBoundingRect?.x || 0,
     y: rootDesignNodeBoundingRect?.y || 0,
+    height: rootDesignNodeBoundingRect?.height || 0,
     id: rootDesignNode.id,
   }
 
@@ -64,11 +66,14 @@ export function getDesignInfoRecorder(rootDesignNode: SceneNode) {
         // 没有渲染的节点，或者没有id的节点，直接过滤掉
         return false
       // 位于上下安全区的节点先全都过滤掉
-      const isOverTopNode = realBoundingRect.y + realBoundingRect.height <= PHONE_HEADER_HEIGHT
-      const isOverBottomNode = realBoundingRect.y >= SAFE_BOTTOM_HEIGHT
-      return !isOverTopNode && !isOverBottomNode
+      const currentY = realBoundingRect.y - rootNodeBoundingOffset.y
+      const isOverTopNode = currentY + realBoundingRect.height <= PHONE_HEADER_HEIGHT
+      const isOverBottomNode = currentY >= (rootDesignNode.height - SAFE_BOTTOM_HEIGHT)
+      console.log('🚀 ~ getDesignInfoRecorder ~ currentY:', designNode.name, currentY, realBoundingRect.height, isOverTopNode, isOverBottomNode)
+      return (!isOverTopNode && !isOverBottomNode) || designNode.id === rootDesignNode.id
     })
-    .map((designNode) => {
+    .map((designNode, index) => {
+      console.log(`🚀 ${index + 1} ~ getDesignInfoRecorder ~ designNode:`, designNode)
       // 格式化节点信息
       const nodeInfo = processSingleDesignNodeInfo(designNode, rootNodeBoundingOffset)
       return [nodeInfo.uniqueId, nodeInfo] as const
