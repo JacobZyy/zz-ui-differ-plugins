@@ -3,14 +3,16 @@ import {
   DESIGN_NODE_PREFIX,
   nodeDistanceDiff,
   onDomInfoRecorder,
+  processMarginCollapsing,
   processPaddingInfo,
   removeSameSizePositionChildren,
   searchNeighborNodes,
+  searchNeighborNodesInitial,
 } from '@ui-differ/core'
 import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
 import { useState } from 'react'
 import { ChromeMessageType } from '@/types'
-import { chromeMessageSender, generateScreenShot } from '@/utils'
+import { chromeMessageSender } from '@/utils'
 import styles from './index.module.scss'
 import RootDetector from './RootDetector'
 
@@ -119,30 +121,33 @@ export default function DomInfoGetter() {
     setIsModalOpen(false)
   }
 
-  /** 获取屏幕截图 */
-  const handleGetScreenShot = async () => {
-    const { imgUrl: screenShot, width, height } = await generateScreenShot()
-    return {
-      screenShot,
-      documentSize: { width, height },
-    }
+  // /** 获取屏幕截图 */
+  // const handleGetScreenShot = async () => {
+  //   const { imgUrl: screenShot, width, height } = await generateScreenShot()
+  //   return {
+  //     screenShot,
+  //     documentSize: { width, height },
+  //   }
+  // }
+
+  /**
+   * dom节点信息链式处理
+   */
+  const handleDomNodePreProcessChain = async (rootNode: HTMLElement) => {
+    const flatNodeMap = await onDomInfoRecorder(rootNode)
+      .then(searchNeighborNodesInitial)
+      .then(processMarginCollapsing)
+      .then(processPaddingInfo)
+      .then(removeSameSizePositionChildren)
+      .then(searchNeighborNodes)
+    console.log('🚀 ~ handleDomNodePreProcessChain ~ flatNodeMap:', flatNodeMap)
+
+    return flatNodeMap
   }
 
   /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
-    const initiedFlatNodeMap = onDomInfoRecorder(rootNode)
-    const rootNodeId = rootNode.getAttribute('unique-id') || ''
-    const rootNodeInfo = initiedFlatNodeMap.get(rootNodeId)
-    if (!rootNodeInfo) {
-      console.error('rootNode has no unique-id')
-      return
-    }
-    // 合并无效padding
-    const paddingMergedFlatNodeMap = processPaddingInfo(initiedFlatNodeMap)
-    // 移除相同尺寸、位置的子节点
-    const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
-    // 搜索邻居节点
-    const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+    const flatNodeMap = await handleDomNodePreProcessChain(rootNode)
 
     // flatNodeMap.forEach((value, key) => {
     //   const currentDom = document.querySelector(`[unique-id="${key}"]`)
@@ -171,24 +176,48 @@ export default function DomInfoGetter() {
     // await handleGetScreenShot()
   }
 
-  const handleTestDomNodeProcessor = (rootNode: HTMLElement) => {
-    const initiedFlatNodeMap = onDomInfoRecorder(rootNode)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ initiedFlatNodeMap:', initiedFlatNodeMap)
-    const rootNodeId = rootNode.getAttribute('unique-id') || ''
-    const rootNodeInfo = initiedFlatNodeMap.get(rootNodeId)
-    if (!rootNodeInfo) {
-      console.error('rootNode has no unique-id')
-      return
-    }
+  const handleTestDomNodeProcessor = async (rootNode: HTMLElement) => {
+    const initiedFlatNodeMap = await onDomInfoRecorder(rootNode)
+    const initiedFlatNodeMapWithInitialNeighborInfos = await searchNeighborNodesInitial(initiedFlatNodeMap)
+    // 处理margin collapse问题
+    const marginCollapsedFlatNodeMap = await processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
+    console.log('🚀 ~ handleStartUiDiff ~ marginCollapsedFlatNodeMap:', marginCollapsedFlatNodeMap)
     // 合并无效padding
-    const paddingMergedFlatNodeMap = processPaddingInfo(initiedFlatNodeMap)
+    const paddingMergedFlatNodeMap = await processPaddingInfo(marginCollapsedFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
     // 移除相同尺寸、位置的子节点
-    const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
+    const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(paddingMergedFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenFlatNodeMap:', removedSameSizePositionChildrenFlatNodeMap)
     // 搜索邻居节点
-    const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+    const flatNodeMap = await searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap:', flatNodeMap)
+
+    const targetEl = document.querySelector('.stParam-item')
+    const targetId = targetEl?.getAttribute('unique-id')
+    const targetChildEl = targetEl?.querySelector('.stParam-item-select')
+    const targetChildId = targetChildEl?.getAttribute('unique-id')
+    if (!targetChildId || !targetId)
+      return
+    const initNode = initiedFlatNodeMap.get(targetId)
+    const initChildNode = initiedFlatNodeMap.get(targetChildId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ initNode:', initNode?.boundingRect, initNode?.paddingInfo)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ initChildNode:', initChildNode?.boundingRect, initChildNode?.paddingInfo)
+    const marginCollapsedNode = marginCollapsedFlatNodeMap.get(targetId)
+    const marginCollapsedChildNode = marginCollapsedFlatNodeMap.get(targetChildId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ marginCollapsedNode:', marginCollapsedNode?.boundingRect, marginCollapsedNode?.paddingInfo)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ marginCollapsedChildNode:', marginCollapsedChildNode?.boundingRect, marginCollapsedChildNode?.paddingInfo)
+    const paddingMergedNode = paddingMergedFlatNodeMap.get(targetId)
+    const paddingMergedChildNode = paddingMergedFlatNodeMap.get(targetChildId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedNode:', paddingMergedNode?.boundingRect, paddingMergedNode?.paddingInfo)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedChildNode:', paddingMergedChildNode?.boundingRect, paddingMergedChildNode?.paddingInfo)
+    const removedSameSizePositionChildrenNode = removedSameSizePositionChildrenFlatNodeMap.get(targetId)
+    const removedSameSizePositionChildrenChildNode = removedSameSizePositionChildrenFlatNodeMap.get(targetChildId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenNode:', removedSameSizePositionChildrenNode?.boundingRect, removedSameSizePositionChildrenNode?.paddingInfo)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenChildNode:', removedSameSizePositionChildrenChildNode?.boundingRect, removedSameSizePositionChildrenChildNode?.paddingInfo)
+    const flatNode = flatNodeMap.get(targetId)
+    const flatChildNode = flatNodeMap.get(targetChildId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNode:', flatNode?.boundingRect, flatNode?.paddingInfo)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ flatChildNode:', flatChildNode?.boundingRect, flatChildNode?.paddingInfo)
   }
 
   return (

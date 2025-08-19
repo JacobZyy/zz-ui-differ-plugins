@@ -79,7 +79,7 @@ function updateOtherNodeInfo(parentNodeId: UniqueId, replaceChildNodeId: UniqueI
   }
 }
 
-export function removeSameSizePositionChildren(flatNodeMap: Map<UniqueId, NodeInfo>) {
+export async function removeSameSizePositionChildren(flatNodeMap: Map<UniqueId, NodeInfo>) {
   // 原层序的顺序
   const floorNodeIdList = Array.from(flatNodeMap.keys())
 

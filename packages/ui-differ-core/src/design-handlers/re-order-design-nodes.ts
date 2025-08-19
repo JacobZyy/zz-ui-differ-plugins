@@ -25,7 +25,7 @@ function sortCompareFn(prev: NodeInfo, next: NodeInfo) {
  * 只需要处理当前节点及其兄弟节点就行
  * @param rootNode 设计稿根节点
  */
-export function reOrderDesignNodes(originNodeMap: Map<UniqueId, NodeInfo>) {
+export async function reOrderDesignNodes(originNodeMap: Map<UniqueId, NodeInfo>) {
   const newNodeMap = produce(originNodeMap, (draftNodeMap) => {
     draftNodeMap.forEach((nodeInfo) => {
       const childrenNodeList = nodeInfo.children.map(id => draftNodeMap.get(id)).filter(it => it != null)

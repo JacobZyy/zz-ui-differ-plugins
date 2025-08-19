@@ -53,7 +53,7 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
   return newNode
 }
 
-export function getDesignInfoRecorder(rootDesignNode: SceneNode) {
+export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
   const floorOrderNodeList = Array.from(floorOrderTraversalWithNode(rootDesignNode))
   const rootDesignNodeBoundingRect = rootDesignNode.absoluteRenderBounds
   const rootNodeBoundingOffset = {

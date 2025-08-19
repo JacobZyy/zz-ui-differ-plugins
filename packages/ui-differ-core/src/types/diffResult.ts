@@ -1,11 +1,22 @@
 import type { NodeInfo } from './node'
 
+export interface DomMarginInfo {
+  marginTop: number
+  marginBottom: number
+}
+
 export interface MarginInfo {
   left: number
   right: number
   top: number
   bottom: number
 }
+
+// 父元素没有padding-top/padding-bottom
+// 父元素没有border-top/border-bottom
+// 父元素没有建立BFC（Block Formatting Context）
+// 父元素没有内容分隔父子margin
+// 元素不是浮动或绝对定位
 
 export interface DiffResultInfo {
   /** diff宽高的结果 */

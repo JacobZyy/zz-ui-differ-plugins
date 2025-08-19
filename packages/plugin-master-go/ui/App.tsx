@@ -17,25 +17,35 @@ import './App.css'
 
 function App() {
   const [selectedNode, setSelectedNode] = useState<Record<UniqueId, NodeInfo>>({})
+
+  const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
+    return getDesignInfoRecorder(rootNode)
+      .then(reOrderDesignNodes)
+      .then(processPaddingInfo)
+      .then(removeSameSizePositionChildren)
+      .then(searchNeighborNodes)
+  }
+
   // 监听来自插件的消息
-  const messageHandler = useMemoizedFn((event: MessageEvent) => {
+  const messageHandler = useMemoizedFn(async (event: MessageEvent) => {
     const { type, data } = event.data
     if (type === PluginMessage.SELECTION_CHANGE) {
       if (!data?.length) {
         message.error('请选中你需要走查的设计稿')
         return
       }
-      // 初始化设计稿节点信息
-      const initialFlatNodeMap = getDesignInfoRecorder(data[0])
-      console.log('🚀 ~ App ~ initialFlatNodeMap:', initialFlatNodeMap)
-      // 重新排序设计稿节点
-      const reorderedFlatNodeMap = reOrderDesignNodes(initialFlatNodeMap)
-      // 合并无效padding
-      const paddingMergedFlatNodeMap = processPaddingInfo(reorderedFlatNodeMap)
-      // 移除相同尺寸、位置的子节点
-      const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
-      // 搜索邻居节点
-      const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+      // // 初始化设计稿节点信息
+      // const initialFlatNodeMap = getDesignInfoRecorder(data[0])
+      // console.log('🚀 ~ App ~ initialFlatNodeMap:', initialFlatNodeMap)
+      // // 重新排序设计稿节点
+      // const reorderedFlatNodeMap = reOrderDesignNodes(initialFlatNodeMap)
+      // // 合并无效padding
+      // const paddingMergedFlatNodeMap = processPaddingInfo(reorderedFlatNodeMap)
+      // // 移除相同尺寸、位置的子节点
+      // const removedSameSizePositionChildrenFlatNodeMap = removeSameSizePositionChildren(paddingMergedFlatNodeMap)
+      // // 搜索邻居节点
+      // const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+      const flatNodeMap = await handleDesignNodePreProcessChain(data[0])
       flatNodeMap.forEach((nodeInfo) => {
         console.log('🚀 ~ nodeInfo:', nodeInfo.nodeName, nodeInfo.parentId, nodeInfo.sibling)
       })

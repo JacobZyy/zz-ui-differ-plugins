@@ -1,5 +1,5 @@
 import type { BoundingRect, NodeInfo, UniqueId } from '../types'
-import { clone } from 'radash'
+import { produce } from 'immer'
 import { currentNodeToSiblingPositionMap, SiblingPosition, validateSiblingPosList } from '../types'
 import { getNodePosition } from '../utils'
 
@@ -110,55 +110,107 @@ function processNodeWithoutNeighbors(config: FindSinglePositionSiblingConfig) {
   return parentNodeInfo?.[position]
 }
 
-/** 查找单个节点的上下左右节点的逻辑 */
-function onSearchNodeNeighbors(nodeId: UniqueId, flatNodeMap: Map<UniqueId, NodeInfo>) {
-  validateSiblingPosList.forEach((position) => {
-    // 获取当前节点信息
-    const currentNodeInfo = flatNodeMap.get(nodeId)
-    // 获取当前节点在对应方向上的兄弟节点位置
-    const siblingPos = currentNodeToSiblingPositionMap[position]
-    // 如果当前节点信息不存在，则返回
-    if (!currentNodeInfo) {
-      return
-    }
-    // 如果当前节点在对应方向上的兄弟节点位置不存在，则返回(说明是无效position)
-    if (!siblingPos) {
-      console.error('invalid sibling position', position, siblingPos)
-      return
-    }
-    // 寻找当前节点在对应方向上的兄弟节点
-    const targetSiblingNodeId = findSinglePositionSibling({ curNodeId: nodeId, flatNodeMap, position })
-    // 如果找到兄弟节点
-    if (targetSiblingNodeId) {
-      // 更新当前节点的相邻节点信息
-      flatNodeMap.set(nodeId, {
-        ...currentNodeInfo,
-        [position]: targetSiblingNodeId,
-      })
-      return
-    }
-    // 如果兄弟节点不存在，则在父节点及父节点的相邻节点中找当前节点的相邻节点信息
-    const targetParentSiblingNodeId = processNodeWithoutNeighbors({ curNodeId: nodeId, flatNodeMap, position })
-    if (!targetParentSiblingNodeId) {
-      return
-    }
-    // 找到了，则更新当前节点的信息
-    flatNodeMap.set(nodeId, {
-      ...currentNodeInfo,
-      [position]: targetParentSiblingNodeId,
-    })
-  })
+/**
+ * 兄弟节点不存在，则在父节点及父节点的相邻节点中找当前节点的相邻节点信息
+ * @param nodeId
+ * @param flatNodeMap
+ * @param position
+ * @returns
+ */
+function onSearchParentNeighborNodes(nodeId: UniqueId, flatNodeMap: Map<UniqueId, NodeInfo>, position: SiblingPosition) {
+  // 获取当前节点信息
+  const currentNodeInfo = flatNodeMap.get(nodeId)
+  // 获取当前节点在对应方向上的兄弟节点位置
+  const siblingPos = currentNodeToSiblingPositionMap[position]
+  // 如果当前节点信息不存在，则返回
+  if (!currentNodeInfo) {
+    return
+  }
+  // 如果当前节点在对应方向上的兄弟节点位置不存在，则返回(说明是无效position)
+  if (!siblingPos) {
+    console.error('invalid sibling position', position, siblingPos)
+    return
+  }
+
+  // 如果兄弟节点不存在，则在父节点及父节点的相邻节点中找当前节点的相邻节点信息
+  const targetParentSiblingNodeId = processNodeWithoutNeighbors({ curNodeId: nodeId, flatNodeMap, position })
+  return targetParentSiblingNodeId
+}
+
+/**
+ * 在兄弟节点中查找当前节点的上下左右节点信息
+ * @param nodeId
+ * @param flatNodeMap
+ * @param position
+ * @returns
+ */
+function onSearchNeighborSiblingNodes(nodeId: UniqueId, flatNodeMap: Map<UniqueId, NodeInfo>, position: SiblingPosition) {
+  // 获取当前节点信息
+  const currentNodeInfo = flatNodeMap.get(nodeId)
+  // 获取当前节点在对应方向上的兄弟节点位置
+  const siblingPos = currentNodeToSiblingPositionMap[position]
+  // 如果当前节点信息不存在，则返回
+  if (!currentNodeInfo) {
+    return
+  }
+  // 如果当前节点在对应方向上的兄弟节点位置不存在，则返回(说明是无效position)
+  if (!siblingPos) {
+    console.error('invalid sibling position', position, siblingPos)
+    return
+  }
+  // 寻找当前节点在对应方向上的兄弟节点
+  const targetSiblingNodeId = findSinglePositionSibling({ curNodeId: nodeId, flatNodeMap, position })
+  return targetSiblingNodeId
 }
 
 /**
  * 基于flatNodeMap, walk一遍，寻找当前节点的上下左右节点。
  * @see  https://f9fq8frk69.feishu.cn/wiki/BzKOwRz89iu77wkJfhwc81EBnGb?fromScene=spaceOverview#share-RhjddIzZwoul3oxoNUgc6rVcnRb
  */
-export function searchNeighborNodes(flatNodeMap: Map<UniqueId, NodeInfo>) {
-  // 深拷贝一份
-  const newFlatNodeMap = new Map<UniqueId, NodeInfo>(Array.from(flatNodeMap.entries()).map(([key, value]) => [key, clone(value)]))
-  const floorOrderIds = Array.from(newFlatNodeMap.keys())
-  floorOrderIds.forEach(nodeId => onSearchNodeNeighbors(nodeId, newFlatNodeMap))
+export async function searchNeighborNodes(flatNodeMap: Map<UniqueId, NodeInfo>) {
+  return produce(flatNodeMap, (newFlatNodeMap) => {
+    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
+      validateSiblingPosList.forEach((position) => {
+        const targetSiblingNodeId = onSearchNeighborSiblingNodes(nodeId, newFlatNodeMap, position)
+        if (targetSiblingNodeId) {
+          newFlatNodeMap.set(nodeId, {
+            ...currentNodeInfo,
+            [position]: targetSiblingNodeId,
+          })
+          return
+        }
 
-  return newFlatNodeMap
+        const targetParentSiblingNodeId = onSearchParentNeighborNodes(nodeId, newFlatNodeMap, position)
+        if (targetParentSiblingNodeId) {
+          newFlatNodeMap.set(nodeId, {
+            ...currentNodeInfo,
+            [position]: targetParentSiblingNodeId,
+          })
+        }
+      })
+    })
+  })
+}
+
+/**
+ * 第一次找邻居节点的信息，用于后续的使用
+ */
+export async function searchNeighborNodesInitial(flatNodeMap: Map<UniqueId, NodeInfo>) {
+  return produce(flatNodeMap, (newFlatNodeMap) => {
+    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
+      validateSiblingPosList.forEach((position) => {
+        const targetSiblingNodeId = onSearchNeighborSiblingNodes(nodeId, newFlatNodeMap, position)
+        if (!targetSiblingNodeId)
+          return
+        const newNodeInfo: NodeInfo = {
+          ...currentNodeInfo,
+          initialNeighborInfos: {
+            ...(currentNodeInfo.initialNeighborInfos || {}),
+            [position]: targetSiblingNodeId,
+          },
+        }
+        newFlatNodeMap.set(nodeId, newNodeInfo)
+      })
+    })
+  })
 }

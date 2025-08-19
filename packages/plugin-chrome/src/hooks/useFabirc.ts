@@ -27,10 +27,10 @@ const verticalMarginRectStyle = {
   opacity: 0.85,
 }
 
-const sizeRectStyle = {
-  stroke: '#83d445',
-  strokeWidth: 2,
-}
+// const sizeRectStyle = {
+//   stroke: '#83d445',
+//   strokeWidth: 2,
+// }
 
 export default function useFabric(canvasId: string) {
   const fabricCanvasRef = useRef<Canvas>(null)

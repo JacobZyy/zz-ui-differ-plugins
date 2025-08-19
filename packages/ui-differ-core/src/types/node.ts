@@ -50,6 +50,13 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   borderInfo: BorderInfo
   /** 背景色 */
   backgroundColor: string
+  /**
+   * 是否是bfc元素
+   * @default false
+   */
+  isBFC?: boolean
+  /** 第一次找邻居节点的信息，用于后续的使用 */
+  initialNeighborInfos?: SiblingRelativeNodeInfo
 }
 
 /** 有效的兄弟节点位置 */
