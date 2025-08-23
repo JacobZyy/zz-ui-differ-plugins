@@ -1,10 +1,17 @@
 import type { BorderInfo, NodeInfo, PaddingInfo, UniqueId } from '../types'
 import { produce } from 'immer'
-import { camel } from 'radash'
-import { SiblingPosition } from '../types'
+import { camel, clone } from 'radash'
+import { convertPositionToBoundingKeys, SiblingPosition } from '../types'
 
 type PaddingInfoDirection = 'left' | 'right' | 'top' | 'bottom'
 const paddingInfoDirectionList = ['left', 'right', 'top', 'bottom'] as const
+
+const paddingDirectionToSiblingPosition: Record<PaddingInfoDirection, SiblingPosition> = {
+  left: SiblingPosition.TOP,
+  right: SiblingPosition.RIGHT,
+  top: SiblingPosition.TOP,
+  bottom: SiblingPosition.BOTTOM,
+}
 
 interface JudgeMergableConfig {
   currentNodeInfo: NodeInfo
@@ -46,14 +53,14 @@ function judgePaddingMergable({ currentNodeInfo, position, flatNodeMap }: JudgeM
   const hasTargetDirectionPadding = !!currentNodeInfo.paddingInfo[paddingKey]
   if (!hasTargetDirectionPadding) {
     // 没有目标方向的padding，则不需要合并
-    return
+    return 0
   }
   const { borderWidth, borderColor } = currentNodeInfo.borderInfo
   // 是否存目标方向的有效边框（有宽度、颜色且颜色不为透明且不和背景相同）
   const hasTargetBorderInfo = !!borderWidth[borderWidthKey] && borderColor[borderColorKey] !== 'transparent' && borderColor[borderColorKey] !== currentBgColor
   if (hasBackgroundColor || hasTargetBorderInfo) {
     // 有背景色或者有有效边框，则不需要合并
-    return
+    return 0
   }
   return currentNodeInfo.paddingInfo[paddingKey]
 }
@@ -66,161 +73,87 @@ function judgePaddingMergable({ currentNodeInfo, position, flatNodeMap }: JudgeM
  * @returns 合并后的节点信息
  */
 function handleMergePadding(curNodeInfo: NodeInfo, position: 'left' | 'right' | 'top' | 'bottom', paddingInfo: number) {
-  return produce(curNodeInfo, (draft) => {
-    if (position === 'left') {
-      draft.boundingRect.x += paddingInfo
-      draft.boundingRect.width -= paddingInfo
-      return
-    }
-    if (position === 'right') {
-      draft.boundingRect.width -= paddingInfo
-      return
-    }
-    if (position === 'top') {
-      draft.boundingRect.y += paddingInfo
-      draft.boundingRect.height -= paddingInfo
-      return
-    }
-    if (position === 'bottom') {
-      draft.boundingRect.height -= paddingInfo
-    }
-  })
+  const clonedNode = clone(curNodeInfo)
+
+  if (position === 'left') {
+    clonedNode.boundingRect.x += paddingInfo
+    clonedNode.boundingRect.width -= paddingInfo
+  }
+  if (position === 'right') {
+    clonedNode.boundingRect.width -= paddingInfo
+  }
+  if (position === 'top') {
+    clonedNode.boundingRect.y += paddingInfo
+    clonedNode.boundingRect.height -= paddingInfo
+  }
+  if (position === 'bottom') {
+    clonedNode.boundingRect.height -= paddingInfo
+  }
+
+  return clonedNode
 }
+
 /**
- * 获取指定方向上最边缘的子节点
+ * 获取当前节点与父节点之间目标方向上的距离
+ * @param childNode 当前节点信息
+ * @param parentNodeInfo 父节点信息
+ * @param direction 目标方向
+ */
+function getDistanceWithParentNode(childNode: NodeInfo, parentNodeInfo: NodeInfo, direction: SiblingPosition) {
+  const { boundingRect: childRect } = childNode
+  const { boundingRect: parentRect } = parentNodeInfo
+  const targetKeys = convertPositionToBoundingKeys[direction]
+  const childValue = targetKeys.reduce((acc, curKey) => acc += childRect[curKey], 0)
+  const parentValue = targetKeys.reduce((acc, curKey) => acc += parentRect[curKey], 0)
+  return Math.abs(childValue - parentValue)
+}
+
+/**
+ * 获取当前节点与父节点之间目标方向上的距离
  * @param currentNodeInfo 当前节点信息
  * @param direction 目标方向
  * @param flatNodeMap 扁平化节点信息
- * @returns 该方向最边缘的子节点信息
+ * @returns
  */
-function getEdgeChildNodes(
-  currentNodeInfo: NodeInfo,
-  direction: PaddingInfoDirection,
-  flatNodeMap: Map<UniqueId, NodeInfo>,
-): NodeInfo[] {
-  const children = currentNodeInfo.children || []
-
-  const directionToSiblingPosition: Record<PaddingInfoDirection, SiblingPosition> = {
-    top: SiblingPosition.TOP,
-    bottom: SiblingPosition.BOTTOM,
-    left: SiblingPosition.LEFT,
-    right: SiblingPosition.RIGHT,
-  }
-
-  const targetPosition = directionToSiblingPosition[direction]
-
-  return children
-    .map(childId => flatNodeMap.get(childId))
-    .filter((childNodeInfo): childNodeInfo is NodeInfo => !!childNodeInfo)
-    .filter((childNodeInfo) => {
-      if (!childNodeInfo.initialNeighborInfos) {
+function handleGetEdgeChildNodesInternalGap(currentNodeInfo: NodeInfo, direction: PaddingInfoDirection, flatNodeMap: Map<UniqueId, NodeInfo>) {
+  const currentPosition = paddingDirectionToSiblingPosition[direction]
+  const targetDirectionChildren = currentNodeInfo.children
+    ?.filter((childId) => {
+      const childNodeInfo = flatNodeMap.get(childId)
+      const { initialNeighborInfos } = childNodeInfo || {}
+      if (!initialNeighborInfos) {
         return false
       }
-      return !childNodeInfo.initialNeighborInfos[targetPosition]
+      return !initialNeighborInfos[currentPosition]
     })
+    ?.map(childId => flatNodeMap.get(childId)!)
+
+  const targetDirectionDistanceList = targetDirectionChildren.map(childNode => getDistanceWithParentNode(childNode, currentNodeInfo, currentPosition))
+
+  if (!targetDirectionDistanceList.length) {
+    return 0
+  }
+  const targetGapValue = Math.min(...targetDirectionDistanceList)
+  return targetGapValue
 }
 
-/**
- * 合并内部间距到padding中
- * @param currentNodeInfo 当前节点信息
- * @param direction 方向
- * @param gapValue 间距值
- * @returns 更新后的节点信息
- */
-function handleMergeInternalGap(
-  currentNodeInfo: NodeInfo,
-  direction: PaddingInfoDirection,
-  gapValue: number,
-): NodeInfo {
-  return produce(currentNodeInfo, (draft) => {
-    const paddingKey = camel(`padding ${direction}`) as keyof PaddingInfo
-
-    // 将间距添加到对应方向的padding中
-    draft.paddingInfo[paddingKey] += gapValue
-
-    // 相应调整boundingRect，缩小父元素的视觉边界
-    switch (direction) {
-      case 'left':
-        draft.boundingRect.x += gapValue
-        draft.boundingRect.width -= gapValue
-        draft.paddingInfo.paddingLeft += gapValue
-        break
-      case 'right':
-        draft.boundingRect.width -= gapValue
-        draft.paddingInfo.paddingRight += gapValue
-        break
-      case 'top':
-        draft.boundingRect.y += gapValue
-        draft.boundingRect.height -= gapValue
-        draft.paddingInfo.paddingTop += gapValue
-        break
-      case 'bottom':
-        draft.boundingRect.height -= gapValue
-        draft.paddingInfo.paddingBottom += gapValue
-        break
-    }
-  })
-}
-export async function processPaddingInfo(flatNodeMap: Map<UniqueId, NodeInfo>) {
-  const flatNodeMapWithPaddingMerged = produce(flatNodeMap, (newFlatNodeMap) => {
-    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
-      paddingInfoDirectionList.forEach((currentPosition) => {
-        const paddingInfo = judgePaddingMergable({
-          currentNodeInfo,
-          flatNodeMap: newFlatNodeMap,
-          position: currentPosition,
-        })
-        const prevNodeInfo = newFlatNodeMap.get(nodeId)
-        if (!paddingInfo || !prevNodeInfo) {
-          return
-        }
-        const newNodeInfo = handleMergePadding(prevNodeInfo, currentPosition, paddingInfo)
-        newFlatNodeMap.set(nodeId, newNodeInfo)
+export const processPaddingInfo = produce((flatNodeMap: Map<UniqueId, NodeInfo>) => {
+  const entries = Array.from(flatNodeMap.entries()).toReversed()
+  entries.forEach(([nodeId]) => {
+    paddingInfoDirectionList.forEach((currentPosition) => {
+      const currentNodeInfo = flatNodeMap.get(nodeId)!
+      // 第一步，坍缩作为外边距的padding
+      const paddingInfo = judgePaddingMergable({
+        currentNodeInfo,
+        flatNodeMap,
+        position: currentPosition,
       })
+      const paddingMergedNode = handleMergePadding(currentNodeInfo, currentPosition, paddingInfo)
+
+      // 第二步，与子节点之间的内边距
+      const targetGapValue = handleGetEdgeChildNodesInternalGap(paddingMergedNode, currentPosition, flatNodeMap)
+      const gapMergedNode = handleMergePadding(paddingMergedNode, currentPosition, targetGapValue)
+      flatNodeMap.set(nodeId, gapMergedNode)
     })
   })
-  const finalMergedFlatNodeMap = produce(flatNodeMapWithPaddingMerged, (newFlatNodeMap) => {
-    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
-      if (!currentNodeInfo.children?.length) {
-        return
-      }
-
-      paddingInfoDirectionList.forEach((direction) => {
-        // 边界上的子节点
-        const edgeChildNodes = getEdgeChildNodes(currentNodeInfo, direction, flatNodeMap)
-        // 边界上的子节点为空，则不需要合并
-        if (edgeChildNodes.length === 0) {
-          return
-        }
-        const paddingKey = camel(`padding ${direction}`) as keyof PaddingInfo
-        // 边界上的子节点，获取其padding值
-        const gaps = edgeChildNodes.map((childNode) => {
-          const paddingValue = childNode.paddingInfo[paddingKey] || 0
-          return paddingValue
-        })
-        if (gaps.length === 0) {
-          return
-        }
-        // 获取最小padding值
-        const internalGap = Math.min(...gaps)
-        // 合并内部间距到padding中
-        const resultNodeInfo = handleMergeInternalGap(currentNodeInfo, direction, internalGap)
-        newFlatNodeMap.set(nodeId, resultNodeInfo)
-
-        // 处理边界节点中的padding
-        edgeChildNodes.forEach((childNode) => {
-          const newChildNode = {
-            ...childNode,
-            paddingInfo: {
-              ...childNode.paddingInfo,
-              [paddingKey]: childNode.paddingInfo[paddingKey] - internalGap,
-            },
-          }
-          newFlatNodeMap.set(childNode.uniqueId, newChildNode)
-        })
-      })
-    })
-  })
-
-  return finalMergedFlatNodeMap
-}
+})

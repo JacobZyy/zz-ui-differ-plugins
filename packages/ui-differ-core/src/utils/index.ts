@@ -1,3 +1,5 @@
 export * from './compare-distance'
+export * from './debuggerHandler'
 export * from './floor-order-traversal'
 export * from './get-node-position'
+export * from './process-color-value'

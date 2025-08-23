@@ -25,6 +25,7 @@
     "single-fn-test:watch": "tsx test.ts --watch"
   },
   "dependencies": {
+    "@alita/chalk": "^1.1.2",
     "@ant-design/icons": "^6.0.0",
     "@tailwindcss/vite": "^4.1.11",
     "ahooks": "^3.9.0",

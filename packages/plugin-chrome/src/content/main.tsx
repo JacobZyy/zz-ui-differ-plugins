@@ -1,8 +1,10 @@
+import chalk from '@alita/chalk'
 import { createRoot } from 'react-dom/client'
 import App from './views/App.tsx'
 import './index.css'
 
-console.log('[CRXJS] Hello world from content script!')
+(window as any).alitadebug = true
+chalk.hello('zz-ui-differ', '0.0.1')
 
 const container = document.createElement('div')
 container.id = 'crxjs-app'

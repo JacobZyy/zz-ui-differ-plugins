@@ -109,13 +109,11 @@ export async function processMarginCollapsing(flatNodeMap: Map<UniqueId, NodeInf
         }
         // 把因为bfc等原因撑开的margin合并到当前元素的padding里面,
         //  这样这边的合并可以吃到后方的padding合并逻辑
+        // NOTE: !不需要处理boundingRect相关的东西，因为会在爬到顶合并的时候统一处理
         if (currentPosition === 'top') {
-          currentNodeInfo.boundingRect.y -= targetMarginInfo
-          currentNodeInfo.boundingRect.height -= targetMarginInfo
           currentNodeInfo.paddingInfo.paddingTop += targetMarginInfo
         }
         if (currentPosition === 'bottom') {
-          currentNodeInfo.boundingRect.height -= targetMarginInfo
           currentNodeInfo.paddingInfo.paddingBottom += targetMarginInfo
         }
       })

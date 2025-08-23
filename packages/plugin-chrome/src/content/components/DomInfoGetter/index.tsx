@@ -148,28 +148,6 @@ export default function DomInfoGetter() {
   /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
     const flatNodeMap = await handleDomNodePreProcessChain(rootNode)
-
-    // flatNodeMap.forEach((value, key) => {
-    //   const currentDom = document.querySelector(`[unique-id="${key}"]`)
-    //   console.log('🚀 ~ handleStartUiDiff ~ currentDom:', currentDom)
-    //   const topDom = document.querySelector(`[unique-id="${value[SiblingPosition.TOP]}"]`)
-    //   if (topDom) {
-    //     console.log('             🚀 ~ handleStartUiDiff ~ topDom:', topDom)
-    //   }
-    //   const leftDom = document.querySelector(`[unique-id="${value[SiblingPosition.LEFT]}"]`)
-    //   if (leftDom) {
-    //     console.log('             🚀 ~ handleStartUiDiff ~ leftDom:', leftDom)
-    //   }
-    //   const rightDom = document.querySelector(`[unique-id="${value[SiblingPosition.RIGHT]}"]`)
-    //   if (rightDom) {
-    //     console.log('             🚀 ~ handleStartUiDiff ~ rightDom:', rightDom)
-    //   }
-    //   const bottomDom = document.querySelector(`[unique-id="${value[SiblingPosition.BOTTOM]}"]`)
-    //   if (bottomDom) {
-    //     console.log('              🚀 ~ handleStartUiDiff ~ bottomDom:', bottomDom)
-    //   }
-    // })
-
     const diffResult = nodeDistanceDiff(flatNodeMap, designNodeInfo)
     console.log('🚀 ~ handleStartUiDiff ~ diffResult:', diffResult)
 
@@ -183,7 +161,7 @@ export default function DomInfoGetter() {
     const marginCollapsedFlatNodeMap = await processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
     console.log('🚀 ~ handleStartUiDiff ~ marginCollapsedFlatNodeMap:', marginCollapsedFlatNodeMap)
     // 合并无效padding
-    const paddingMergedFlatNodeMap = await processPaddingInfo(marginCollapsedFlatNodeMap)
+    const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
     // 移除相同尺寸、位置的子节点
     const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(paddingMergedFlatNodeMap)
@@ -199,7 +177,9 @@ export default function DomInfoGetter() {
     if (!targetChildId || !targetId)
       return
     const initNode = initiedFlatNodeMap.get(targetId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ targetId:', targetId)
     const initChildNode = initiedFlatNodeMap.get(targetChildId)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ targetChildId:', targetChildId)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ initNode:', initNode?.boundingRect, initNode?.paddingInfo)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ initChildNode:', initChildNode?.boundingRect, initChildNode?.paddingInfo)
     const marginCollapsedNode = marginCollapsedFlatNodeMap.get(targetId)
