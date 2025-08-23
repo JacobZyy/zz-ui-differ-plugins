@@ -50,6 +50,8 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   borderInfo: BorderInfo
   /** 背景色 */
   backgroundColor: string
+  /** 相邻节点的边距 */
+  neighborMarginInfo: Partial<Record<SiblingPosition, number>>
   /**
    * 是否是bfc元素
    * @default false

@@ -1,7 +1,8 @@
 import type { BorderInfo, NodeInfo, PaddingInfo, UniqueId } from '../types'
 import { produce } from 'immer'
 import { camel, clone } from 'radash'
-import { convertPositionToBoundingKeys, SiblingPosition } from '../types'
+import { SiblingPosition } from '../types'
+import { getDistanceWithParentNode } from './get-neighbor-distance'
 
 type PaddingInfoDirection = 'left' | 'right' | 'top' | 'bottom'
 const paddingInfoDirectionList = ['left', 'right', 'top', 'bottom'] as const
@@ -91,21 +92,6 @@ function handleMergePadding(curNodeInfo: NodeInfo, position: 'left' | 'right' | 
   }
 
   return clonedNode
-}
-
-/**
- * 获取当前节点与父节点之间目标方向上的距离
- * @param childNode 当前节点信息
- * @param parentNodeInfo 父节点信息
- * @param direction 目标方向
- */
-function getDistanceWithParentNode(childNode: NodeInfo, parentNodeInfo: NodeInfo, direction: SiblingPosition) {
-  const { boundingRect: childRect } = childNode
-  const { boundingRect: parentRect } = parentNodeInfo
-  const targetKeys = convertPositionToBoundingKeys[direction]
-  const childValue = targetKeys.reduce((acc, curKey) => acc += childRect[curKey], 0)
-  const parentValue = targetKeys.reduce((acc, curKey) => acc += parentRect[curKey], 0)
-  return Math.abs(childValue - parentValue)
 }
 
 /**

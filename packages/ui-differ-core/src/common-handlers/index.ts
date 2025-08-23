@@ -1,5 +1,5 @@
+export * from './get-neighbor-distance'
 export * from './get-same-position-node'
-export * from './node-distance-diff'
 export * from './process-padding-info'
 export * from './remove-same-size-position-children'
 export * from './search-neighbor-nodes'

@@ -1,7 +1,7 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
 import {
   DESIGN_NODE_PREFIX,
-  nodeDistanceDiff,
+  getNeighborNodeDistance,
   onDomInfoRecorder,
   processMarginCollapsing,
   processPaddingInfo,
@@ -140,6 +140,7 @@ export default function DomInfoGetter() {
       .then(processPaddingInfo)
       .then(removeSameSizePositionChildren)
       .then(searchNeighborNodes)
+      .then(getNeighborNodeDistance)
     console.log('🚀 ~ handleDomNodePreProcessChain ~ flatNodeMap:', flatNodeMap)
 
     return flatNodeMap
@@ -148,8 +149,7 @@ export default function DomInfoGetter() {
   /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
     const flatNodeMap = await handleDomNodePreProcessChain(rootNode)
-    const diffResult = nodeDistanceDiff(flatNodeMap, designNodeInfo)
-    console.log('🚀 ~ handleStartUiDiff ~ diffResult:', diffResult)
+    console.log('🚀 ~ handleStartUiDiff ~ flatNodeMap:', flatNodeMap)
 
     // await handleGetScreenShot()
   }
