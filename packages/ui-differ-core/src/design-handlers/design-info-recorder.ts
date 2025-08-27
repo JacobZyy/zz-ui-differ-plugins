@@ -13,7 +13,6 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
   const nodeId = designNode.id
   // 在上方已经进行过滤了
   const boundingRect = designNode.absoluteRenderBounds!
-
   const realBoundingRect: BoundingRect = {
     x: convertDesignToPx(boundingRect.x - rootOffset.x),
     // 算y的时候需要把手机头的高度去掉
@@ -31,9 +30,6 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
   // 获取子节点id
   const childrenIds = hasChildren ? Array.from((designNode as NodeWithChild).children).map(child => child.id) : []
   const paddingInfo = getDesignPaddingInfo(designNode)
-  if (designNode.name === 'card2') {
-    console.log('🚀 ~ processSingleDesignNodeInfo ~ paddingInfo:', paddingInfo, designNode)
-  }
   const borderInfo = getDesignBorderInfo(designNode)
   const backgroundColor = getDesignBackgroundColor(designNode)
   const siblingParentInfo = designNodeParentSiblingMap.get(nodeId)
@@ -49,6 +45,8 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
     paddingInfo,
     borderInfo,
     backgroundColor,
+    neighborMarginInfo: {},
+    initialNeighborInfos: {},
   }
   return newNode
 }

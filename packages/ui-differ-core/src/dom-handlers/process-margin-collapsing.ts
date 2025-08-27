@@ -92,33 +92,31 @@ function getMarginInfoForMerge(currentNodeInfo: NodeInfo, flatNodeMap: Map<Uniqu
  * @param flatNodeMap 扁平化节点信息
  * @returns 处理后的扁平化节点信息
  */
-export async function processMarginCollapsing(flatNodeMap: Map<UniqueId, NodeInfo>) {
-  return produce(flatNodeMap, (newFlatNodeMap) => {
-    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
-      const shouldMergeDirectionList = marginInfoDirectionList.filter(currentPosition => judgeMarginCollapsing({ currentNodeInfo, position: currentPosition }))
-      if (!shouldMergeDirectionList.length) {
+export const processMarginCollapsing = produce((flatNodeMap: Map<UniqueId, NodeInfo>) => {
+  flatNodeMap.forEach((currentNodeInfo, nodeId) => {
+    const shouldMergeDirectionList = marginInfoDirectionList.filter(currentPosition => judgeMarginCollapsing({ currentNodeInfo, position: currentPosition }))
+    if (!shouldMergeDirectionList.length) {
+      return
+    }
+
+    const marginInfoForMerge = getMarginInfoForMerge(currentNodeInfo, flatNodeMap)
+
+    shouldMergeDirectionList.forEach((currentPosition) => {
+      const targetMarginInfo = marginInfoForMerge[currentPosition]
+      if (!targetMarginInfo) {
         return
       }
-
-      const marginInfoForMerge = getMarginInfoForMerge(currentNodeInfo, newFlatNodeMap)
-
-      shouldMergeDirectionList.forEach((currentPosition) => {
-        const targetMarginInfo = marginInfoForMerge[currentPosition]
-        if (!targetMarginInfo) {
-          return
-        }
-        // 把因为bfc等原因撑开的margin合并到当前元素的padding里面,
-        //  这样这边的合并可以吃到后方的padding合并逻辑
-        // NOTE: !不需要处理boundingRect相关的东西，因为会在爬到顶合并的时候统一处理
-        if (currentPosition === 'top') {
-          currentNodeInfo.paddingInfo.paddingTop += targetMarginInfo
-        }
-        if (currentPosition === 'bottom') {
-          currentNodeInfo.paddingInfo.paddingBottom += targetMarginInfo
-        }
-      })
-
-      newFlatNodeMap.set(nodeId, currentNodeInfo)
+      // 把因为bfc等原因撑开的margin合并到当前元素的padding里面,
+      //  这样这边的合并可以吃到后方的padding合并逻辑
+      // NOTE: !不需要处理boundingRect相关的东西，因为会在爬到顶合并的时候统一处理
+      if (currentPosition === 'top') {
+        currentNodeInfo.paddingInfo.paddingTop += targetMarginInfo
+      }
+      if (currentPosition === 'bottom') {
+        currentNodeInfo.paddingInfo.paddingBottom += targetMarginInfo
+      }
     })
+
+    flatNodeMap.set(nodeId, currentNodeInfo)
   })
-}
+})

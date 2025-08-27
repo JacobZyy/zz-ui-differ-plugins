@@ -30,6 +30,15 @@ export interface BoundingRect {
 /** 只记录2 4 6 8 四个方向的兄弟节点信息 */
 type SiblingRelativeNodeInfo = Partial<Record<SiblingPosition, UniqueId>>
 
+/** 单节点匹配结果 */
+export interface MatchResult {
+  designNodeId: UniqueId
+  confidence: number
+  centerDistance: number
+  overlapRatio: number
+  offsetCorrected: boolean
+}
+
 /**
  * 节点信息
  */
@@ -59,6 +68,9 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   isBFC?: boolean
   /** 第一次找邻居节点的信息，用于后续的使用 */
   initialNeighborInfos?: SiblingRelativeNodeInfo
+  /** 匹配的设计稿节点id */
+  matchedDesignNodeId?: UniqueId
+  matchResult?: MatchResult
 }
 
 /** 有效的兄弟节点位置 */

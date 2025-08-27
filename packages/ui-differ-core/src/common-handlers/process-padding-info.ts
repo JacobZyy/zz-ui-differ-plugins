@@ -8,7 +8,7 @@ type PaddingInfoDirection = 'left' | 'right' | 'top' | 'bottom'
 const paddingInfoDirectionList = ['left', 'right', 'top', 'bottom'] as const
 
 const paddingDirectionToSiblingPosition: Record<PaddingInfoDirection, SiblingPosition> = {
-  left: SiblingPosition.TOP,
+  left: SiblingPosition.LEFT,
   right: SiblingPosition.RIGHT,
   top: SiblingPosition.TOP,
   bottom: SiblingPosition.BOTTOM,
@@ -74,24 +74,24 @@ function judgePaddingMergable({ currentNodeInfo, position, flatNodeMap }: JudgeM
  * @returns 合并后的节点信息
  */
 function handleMergePadding(curNodeInfo: NodeInfo, position: 'left' | 'right' | 'top' | 'bottom', paddingInfo: number) {
-  const clonedNode = clone(curNodeInfo)
+  const clonedBoundingRect = clone(curNodeInfo.boundingRect)
 
   if (position === 'left') {
-    clonedNode.boundingRect.x += paddingInfo
-    clonedNode.boundingRect.width -= paddingInfo
+    clonedBoundingRect.x += paddingInfo
+    clonedBoundingRect.width -= paddingInfo
   }
   if (position === 'right') {
-    clonedNode.boundingRect.width -= paddingInfo
+    clonedBoundingRect.width -= paddingInfo
   }
   if (position === 'top') {
-    clonedNode.boundingRect.y += paddingInfo
-    clonedNode.boundingRect.height -= paddingInfo
+    clonedBoundingRect.y += paddingInfo
+    clonedBoundingRect.height -= paddingInfo
   }
   if (position === 'bottom') {
-    clonedNode.boundingRect.height -= paddingInfo
+    clonedBoundingRect.height -= paddingInfo
   }
 
-  return clonedNode
+  return clonedBoundingRect
 }
 
 /**
@@ -134,12 +134,13 @@ export const processPaddingInfo = produce((flatNodeMap: Map<UniqueId, NodeInfo>)
         flatNodeMap,
         position: currentPosition,
       })
-      const paddingMergedNode = handleMergePadding(currentNodeInfo, currentPosition, paddingInfo)
+      const paddingMergedBoundingRect = handleMergePadding(currentNodeInfo, currentPosition, paddingInfo)
+      currentNodeInfo.boundingRect = paddingMergedBoundingRect
 
       // 第二步，与子节点之间的内边距
-      const targetGapValue = handleGetEdgeChildNodesInternalGap(paddingMergedNode, currentPosition, flatNodeMap)
-      const gapMergedNode = handleMergePadding(paddingMergedNode, currentPosition, targetGapValue)
-      flatNodeMap.set(nodeId, gapMergedNode)
+      const targetGapValue = handleGetEdgeChildNodesInternalGap(currentNodeInfo, currentPosition, flatNodeMap)
+      const gapMergedBoundingRect = handleMergePadding(currentNodeInfo, currentPosition, targetGapValue)
+      currentNodeInfo.boundingRect = gapMergedBoundingRect
     })
   })
 })

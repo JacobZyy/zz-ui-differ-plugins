@@ -41,6 +41,5 @@ export function getParentSiblingNodes(rootNode: SceneNode): Map<UniqueId, Pick<N
   // 从根节点开始构建关系
   buildNodeRelations(rootNode)
 
-  console.log('🚀 ~ getNodesFloorInfo ~ flatNodeMap:', flatNodeMap)
   return flatNodeMap
 }

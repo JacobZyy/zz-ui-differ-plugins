@@ -167,50 +167,39 @@ function onSearchNeighborSiblingNodes(nodeId: UniqueId, flatNodeMap: Map<UniqueI
  * 基于flatNodeMap, walk一遍，寻找当前节点的上下左右节点。
  * @see  https://f9fq8frk69.feishu.cn/wiki/BzKOwRz89iu77wkJfhwc81EBnGb?fromScene=spaceOverview#share-RhjddIzZwoul3oxoNUgc6rVcnRb
  */
-export async function searchNeighborNodes(flatNodeMap: Map<UniqueId, NodeInfo>) {
-  return produce(flatNodeMap, (newFlatNodeMap) => {
-    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
-      validateSiblingPosList.forEach((position) => {
-        const targetSiblingNodeId = onSearchNeighborSiblingNodes(nodeId, newFlatNodeMap, position)
-        if (targetSiblingNodeId) {
-          newFlatNodeMap.set(nodeId, {
-            ...currentNodeInfo,
-            [position]: targetSiblingNodeId,
-          })
-          return
-        }
+export const searchNeighborNodes = produce((flatNodeMap: Map<UniqueId, NodeInfo>) => {
+  flatNodeMap.forEach((currentNodeInfo, nodeId) => {
+    validateSiblingPosList.forEach((position) => {
+      const targetSiblingNodeId = onSearchNeighborSiblingNodes(nodeId, flatNodeMap, position)
 
-        const targetParentSiblingNodeId = onSearchParentNeighborNodes(nodeId, newFlatNodeMap, position)
-        if (targetParentSiblingNodeId) {
-          newFlatNodeMap.set(nodeId, {
-            ...currentNodeInfo,
-            [position]: targetParentSiblingNodeId,
-          })
-        }
-      })
+      if (targetSiblingNodeId) {
+        currentNodeInfo[position] = targetSiblingNodeId
+        return
+      }
+
+      const targetParentSiblingNodeId = onSearchParentNeighborNodes(nodeId, flatNodeMap, position)
+      if (targetParentSiblingNodeId) {
+        currentNodeInfo[position] = targetParentSiblingNodeId
+      }
     })
   })
-}
+})
 
 /**
  * 第一次找邻居节点的信息，用于后续的使用
  */
-export async function searchNeighborNodesInitial(flatNodeMap: Map<UniqueId, NodeInfo>) {
-  return produce(flatNodeMap, (newFlatNodeMap) => {
-    newFlatNodeMap.forEach((currentNodeInfo, nodeId) => {
-      validateSiblingPosList.forEach((position) => {
-        const targetSiblingNodeId = onSearchNeighborSiblingNodes(nodeId, newFlatNodeMap, position)
-        if (!targetSiblingNodeId)
-          return
-        const newNodeInfo: NodeInfo = {
-          ...currentNodeInfo,
-          initialNeighborInfos: {
-            ...(currentNodeInfo.initialNeighborInfos || {}),
-            [position]: targetSiblingNodeId,
-          },
-        }
-        newFlatNodeMap.set(nodeId, newNodeInfo)
-      })
+export const searchNeighborNodesInitial = produce((flatNodeMap: Map<UniqueId, NodeInfo>) => {
+  flatNodeMap.forEach((currentNodeInfo, nodeId) => {
+    validateSiblingPosList.forEach((position) => {
+      const targetSiblingNodeId = onSearchNeighborSiblingNodes(nodeId, flatNodeMap, position)
+      if (!targetSiblingNodeId)
+        return
+
+      const prevInitialNeighborInfo = currentNodeInfo.initialNeighborInfos || {}
+      currentNodeInfo.initialNeighborInfos = {
+        ...prevInitialNeighborInfo,
+        [position]: targetSiblingNodeId,
+      }
     })
   })
-}
+})

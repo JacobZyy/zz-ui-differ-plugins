@@ -30,6 +30,7 @@ function replaceTargetPositionNode(sourceId: UniqueId, targetId: UniqueId, origi
  */
 function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: NodeInfo) {
   // 合并父子节点信息
+  // NODE!: 这里合并会丢一些后续用不到的信息
   const mergedNodeInfo: NodeInfo = {
     nodeName: childNodeInfo.nodeName,
     uniqueId: childNodeInfo.uniqueId,
@@ -42,6 +43,8 @@ function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: N
     // 判断的逻辑是父节点只有一个子节点
     // 所以可以直接把父节点的兄弟节点作为该子节点的兄弟节点
     sibling: parentNodeInfo.sibling,
+    initialNeighborInfos: parentNodeInfo.initialNeighborInfos,
+    neighborMarginInfo: parentNodeInfo.neighborMarginInfo,
     // 相邻节点同步为父节点的相邻节点
     [SiblingPosition.TOP]: parentNodeInfo[SiblingPosition.TOP],
     [SiblingPosition.BOTTOM]: parentNodeInfo[SiblingPosition.BOTTOM],

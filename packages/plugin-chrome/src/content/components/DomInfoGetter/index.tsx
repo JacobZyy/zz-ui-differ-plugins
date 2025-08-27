@@ -5,11 +5,13 @@ import {
   onDomInfoRecorder,
   processMarginCollapsing,
   processPaddingInfo,
+  recordHybridNodeMatchResult,
   removeSameSizePositionChildren,
   searchNeighborNodes,
   searchNeighborNodesInitial,
+  uiDiff,
 } from '@ui-differ/core'
-import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
+import { Button, FloatButton, message, Modal, Space, Spin } from 'antd'
 import { useState } from 'react'
 import { ChromeMessageType } from '@/types'
 import { chromeMessageSender } from '@/utils'
@@ -31,7 +33,6 @@ export default function DomInfoGetter() {
         return
       }
       const result = designNodeJSON.replace(DESIGN_NODE_PREFIX, '')
-      console.log('🚀 ~ onReadingClipboard ~ result:', result)
       return result
     }
     catch (error) {
@@ -47,7 +48,6 @@ export default function DomInfoGetter() {
   const handleGetClipboardContent = async () => {
     try {
       const designNodeJSON = await onReadingClipboard()
-      console.log('🚀 ~ handleGetClipboardContent ~ designNodeJSON:', designNodeJSON)
       if (!designNodeJSON)
         return
       const nodeList = JSON.parse(designNodeJSON)
@@ -141,8 +141,7 @@ export default function DomInfoGetter() {
       .then(removeSameSizePositionChildren)
       .then(searchNeighborNodes)
       .then(getNeighborNodeDistance)
-    console.log('🚀 ~ handleDomNodePreProcessChain ~ flatNodeMap:', flatNodeMap)
-
+      .then(nodeMap => recordHybridNodeMatchResult(nodeMap, designNodeInfo))
     return flatNodeMap
   }
 
@@ -151,14 +150,28 @@ export default function DomInfoGetter() {
     const flatNodeMap = await handleDomNodePreProcessChain(rootNode)
     console.log('🚀 ~ handleStartUiDiff ~ flatNodeMap:', flatNodeMap)
 
+    const diffResult = uiDiff(flatNodeMap, designNodeInfo)
+    // diffResult.forEach((resultItem) => {
+    //   const { originNode, designNode, distanceResult } = resultItem
+    //   const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
+    //   const designNodeName = designNode.nodeName
+    //   chalk.info('========dom节点:========\n')
+    //   console.info(nodeEl)
+    //   chalk.info(`========设计稿节点:${designNodeName}========\n`)
+    //   console.info(distanceResult)
+    //   chalk.info('-------------------------\n')
+    // })
     // await handleGetScreenShot()
   }
 
-  const handleTestDomNodeProcessor = async (rootNode: HTMLElement) => {
-    const initiedFlatNodeMap = await onDomInfoRecorder(rootNode)
-    const initiedFlatNodeMapWithInitialNeighborInfos = await searchNeighborNodesInitial(initiedFlatNodeMap)
+  const handleTestDomNodeProcessor = async () => {
+    const rootNode = document.querySelector('.app-wrapper')?.children[0]
+    if (!rootNode)
+      return
+    const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)
+    const initiedFlatNodeMapWithInitialNeighborInfos = searchNeighborNodesInitial(initiedFlatNodeMap)
     // 处理margin collapse问题
-    const marginCollapsedFlatNodeMap = await processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
+    const marginCollapsedFlatNodeMap = processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
     console.log('🚀 ~ handleStartUiDiff ~ marginCollapsedFlatNodeMap:', marginCollapsedFlatNodeMap)
     // 合并无效padding
     const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
@@ -167,12 +180,12 @@ export default function DomInfoGetter() {
     const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(paddingMergedFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenFlatNodeMap:', removedSameSizePositionChildrenFlatNodeMap)
     // 搜索邻居节点
-    const flatNodeMap = await searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+    const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap:', flatNodeMap)
 
-    const targetEl = document.querySelector('.stParam-item')
+    const targetEl = document.querySelector('.z-nav-bar')
     const targetId = targetEl?.getAttribute('unique-id')
-    const targetChildEl = targetEl?.querySelector('.stParam-item-select')
+    const targetChildEl = targetEl?.querySelector('.z-nav-bar__left')
     const targetChildId = targetChildEl?.getAttribute('unique-id')
     if (!targetChildId || !targetId)
       return
@@ -221,18 +234,24 @@ export default function DomInfoGetter() {
         destroyOnHidden
       >
         <Spin spinning={clipboardLoading} tip="读取剪切板信息中...">
-          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} onTestDomNodeProcessor={handleTestDomNodeProcessor} />
-          <Flex gap={4} wrap>
+          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+
+          <Space.Compact>
             <Button variant="filled" color="cyan" onClick={handleResetDeviceEmulation}>
               重置设备模拟
             </Button>
             <Button variant="filled" color="gold" onClick={handleChangeWindowSize}>
               调整设备模拟
             </Button>
+          </Space.Compact>
+          <Space.Compact>
             <Button variant="filled" color="lime" onClick={handleGetClipboardContent}>
               获取剪切板内容
             </Button>
-          </Flex>
+            <Button variant="filled" color="red" onClick={handleTestDomNodeProcessor}>
+              dom数据处理测试
+            </Button>
+          </Space.Compact>
         </Spin>
       </Modal>
     </>

@@ -18,7 +18,6 @@ export function getSamePositionNode(currentNodeInfo: NodeInfo, mgNodeInfoMap: Ma
   entries.forEach(([mgNodeId, mgNodeInfo]) => {
     const { x, y, height, width } = currentNodeInfo.boundingRect
     const { x: mgX, y: mgY, height: mgHeight, width: mgWidth } = mgNodeInfo.boundingRect
-
     // 计算位置和尺寸的欧几里得距离
     const positionDistance = Math.sqrt(
       (x - mgX) ** 2

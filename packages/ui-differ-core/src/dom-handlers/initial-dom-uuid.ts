@@ -14,8 +14,9 @@ export function initialDomUUID(rootDom: Element): void {
   // 处理所有子节点（包括文本节点）
   const childNodes = Array.from(rootDom.childNodes)
 
+  // NOTE: 这段逻辑删除，方便处理文本节点比对
   // 检查是否需要包装文本节点（只有在兄弟节点中有非文本节点时才包装）
-  const shouldWrapTextNodes = hasMixedNodeTypes(childNodes)
+  // const shouldWrapTextNodes = hasMixedNodeTypes(childNodes)
 
   childNodes.forEach((child) => {
     if (child.nodeType === Node.ELEMENT_NODE) {
@@ -26,7 +27,7 @@ export function initialDomUUID(rootDom: Element): void {
     if (child.nodeType === Node.TEXT_NODE) {
       // 只有在需要包装且文本非空时才处理文本节点
       const textContent = child.textContent?.trim()
-      if (!shouldWrapTextNodes || !textContent) {
+      if (!textContent) {
         return
       }
       return wrapTextNodeWithSpan(child as Text, rootDom)
@@ -39,11 +40,11 @@ export function initialDomUUID(rootDom: Element): void {
  * @param childNodes - 子节点列表
  * @returns 是否包含混合类型的节点
  */
-function hasMixedNodeTypes(childNodes: Node[]): boolean {
-  const hasTextNode = childNodes.some(node => node.nodeType === Node.TEXT_NODE)
-  const hasElementNode = childNodes.some(node => node.nodeType === Node.ELEMENT_NODE)
-  return hasTextNode && hasElementNode
-}
+// function hasMixedNodeTypes(childNodes: Node[]): boolean {
+//   const hasTextNode = childNodes.some(node => node.nodeType === Node.TEXT_NODE)
+//   const hasElementNode = childNodes.some(node => node.nodeType === Node.ELEMENT_NODE)
+//   return hasTextNode && hasElementNode
+// }
 
 /**
  * 将文本节点包装在带有 unique-id 的 span 元素中
@@ -60,7 +61,7 @@ function wrapTextNodeWithSpan(textNode: Text, parentElement: Element): void {
   // 使用内联样式重置所有可能影响文本显示的样式属性
   // 这样可以确保 span 不会改变文本的任何视觉表现
   wrapper.style.cssText = `
-    display: inline !important;
+    display: inline-block !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
@@ -71,7 +72,6 @@ function wrapTextNodeWithSpan(textNode: Text, parentElement: Element): void {
     text-transform: inherit !important;
     letter-spacing: inherit !important;
     word-spacing: inherit !important;
-    line-height: inherit !important;
     text-align: inherit !important;
     vertical-align: inherit !important;
     white-space: inherit !important;
@@ -87,6 +87,7 @@ function wrapTextNodeWithSpan(textNode: Text, parentElement: Element): void {
     transform: none !important;
     transition: none !important;
     animation: none !important;
+    lineHeight: 1em !important;
   `.replace(/\s+/g, ' ').trim()
 
   // 将文本节点移动到 span 中

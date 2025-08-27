@@ -29,9 +29,13 @@ function getIsSiblingOrParents(currentNodeInfo: NodeInfo, targetNodeId: UniqueId
 }
 
 /**
- * 获取当前节点与兄弟节点之间的距离
+ * @description 获取当前节点与兄弟节点之间目标方向上的距离
+ * @description 该函数计算当前节点与兄弟节点之间的距离，通过计算当前节点的 boundingRect 的某些 key 的值
+ *              与兄弟节点的 boundingRect 的某些 key 的值的差值，并返回绝对值
  * @param currentNodeInfo 当前节点信息
  * @param siblingNodeInfo 兄弟节点信息
+ * @param direction 目标方向
+ * @returns 两个节点之间的距离
  */
 export function getDistanceWidthSiblingNode(currentNodeInfo: NodeInfo, siblingNodeInfo: NodeInfo, direction: SiblingPosition) {
   const { boundingRect: currentRect } = currentNodeInfo

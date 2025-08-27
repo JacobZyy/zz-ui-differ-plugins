@@ -11,10 +11,10 @@ const DEFAULT_ROOT_NODE_CLASS_NAME = '.app-wrapper'
 interface RootDetectorProps {
   onClose: () => void
   onConfirm: (rootNode: HTMLElement) => void
-  onTestDomNodeProcessor: (rootNode: HTMLElement) => void
+
 }
 
-export default function RootDetector({ onClose, onConfirm, onTestDomNodeProcessor }: RootDetectorProps) {
+export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) {
   const [targetRootNode, setTargetRootNode] = useState<HTMLElement | null>(null)
   const [isEdit, _setIsEdit] = useState(false)
   const [form] = Form.useForm()
@@ -110,12 +110,6 @@ export default function RootDetector({ onClose, onConfirm, onTestDomNodeProcesso
           <Flex justify="end" gap={4}>
             <Button type="primary" onClick={handleStartUiDiff}>
               开始ui比对
-            </Button>
-            <Button variant="filled" color="lime" onClick={() => onTestDomNodeProcessor(targetRootNode)}>
-              测试dom节点处理器
-            </Button>
-            <Button onClick={handleCloseModal}>
-              取消
             </Button>
           </Flex>
         </Flex>

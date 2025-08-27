@@ -37,6 +37,8 @@ function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
     borderInfo,
     paddingInfo,
     backgroundColor,
+    neighborMarginInfo: {},
+    initialNeighborInfos: {},
     isBFC,
   }
   return newNode
