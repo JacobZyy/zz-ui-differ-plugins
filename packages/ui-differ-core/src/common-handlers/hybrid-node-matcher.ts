@@ -49,18 +49,18 @@ function calculateCenterDistance(domRect: BoundingRect, designRect: BoundingRect
   return Math.sqrt((domCenterX - designCenterX) ** 2 + (domCenterY - designCenterY) ** 2)
 }
 
-/**
- * 检查设计稿节点是否在DOM父节点边界内
- */
-function isWithinParentBounds(designNode: NodeInfo, domParent: NodeInfo, offset: OffsetCorrection = { x: 0, y: 0, confidence: 0 }): boolean {
-  const { x, y } = designNode.boundingRect
-  const correctedX = x + offset.x
-  const correctedY = y + offset.y
+// /**
+//  * 检查设计稿节点是否在DOM父节点边界内
+//  */
+// function isWithinParentBounds(designNode: NodeInfo, domParent: NodeInfo, offset: OffsetCorrection = { x: 0, y: 0, confidence: 0 }): boolean {
+//   const { x, y } = designNode.boundingRect
+//   const correctedX = x + offset.x
+//   const correctedY = y + offset.y
 
-  const { x: px, y: py, width: pw, height: ph } = domParent.boundingRect
+//   const { x: px, y: py, width: pw, height: ph } = domParent.boundingRect
 
-  return correctedX >= px && correctedY >= py && correctedX <= px + pw && correctedY <= py + ph
-}
+//   return correctedX >= px && correctedY >= py && correctedX <= px + pw && correctedY <= py + ph
+// }
 
 /**
  * 基于已匹配的相邻节点计算偏移量修正
@@ -129,8 +129,9 @@ function matchSingleNode({ domNode, designNodeMap, domParentNode, matchedPairs }
   let bestScore = -1
 
   designNodeMap.forEach((designNode) => {
+    // const isWithinParents = isWithinParentBounds(designNode, domParentNode, offsetCorrection)
     // 父节点边界检查
-    if (domParentNode && !isWithinParentBounds(designNode, domParentNode, offsetCorrection)) {
+    if (domParentNode) {
       return
     }
 

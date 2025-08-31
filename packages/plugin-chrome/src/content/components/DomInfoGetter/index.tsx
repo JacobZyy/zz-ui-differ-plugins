@@ -9,12 +9,14 @@ import {
   removeSameSizePositionChildren,
   searchNeighborNodes,
   searchNeighborNodesInitial,
+  shrinkRectBounding,
   uiDiff,
 } from '@ui-differ/core'
 import { Button, FloatButton, message, Modal, Space, Spin } from 'antd'
 import { useState } from 'react'
 import { ChromeMessageType } from '@/types'
 import { chromeMessageSender } from '@/utils'
+import { drawCurrentNodeInfos } from '@/utils/drawCurrentNodeInfos'
 import styles from './index.module.scss'
 import RootDetector from './RootDetector'
 
@@ -170,18 +172,23 @@ export default function DomInfoGetter() {
       return
     const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)
     const initiedFlatNodeMapWithInitialNeighborInfos = searchNeighborNodesInitial(initiedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ initiedFlatNodeMapWithInitialNeighborInfos:', initiedFlatNodeMapWithInitialNeighborInfos)
     // 处理margin collapse问题
     const marginCollapsedFlatNodeMap = processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
     console.log('🚀 ~ handleStartUiDiff ~ marginCollapsedFlatNodeMap:', marginCollapsedFlatNodeMap)
     // 合并无效padding
     const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
+    const boundingRectShrinkedNodeMap = shrinkRectBounding(paddingMergedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ boundingRectShrinkedNodeMap:', boundingRectShrinkedNodeMap)
     // 移除相同尺寸、位置的子节点
-    const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(paddingMergedFlatNodeMap)
+    const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(boundingRectShrinkedNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenFlatNodeMap:', removedSameSizePositionChildrenFlatNodeMap)
     // 搜索邻居节点
     const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
     console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap:', flatNodeMap)
+
+    drawCurrentNodeInfos(flatNodeMap)
 
     const targetEl = document.querySelector('.z-nav-bar')
     const targetId = targetEl?.getAttribute('unique-id')

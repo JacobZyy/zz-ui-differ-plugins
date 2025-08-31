@@ -83,5 +83,5 @@ export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
 
   const initialNodeMap = new Map(flatNodeMapEntries)
 
-  return initialNodeMap
+  return { initialNodeMap, rootNodeBoundingOffset }
 }

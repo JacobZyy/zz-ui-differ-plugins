@@ -12,6 +12,12 @@ const coreProcess = spawn('pnpm', ['dev:core'], {
   cwd: process.cwd(),
 })
 
+const webTesterProcess = spawn('pnpm', ['dev:web-tester'], {
+  stdio: 'inherit',
+  shell: true,
+  cwd: process.cwd(),
+})
+
 // 等待 core 包启动完成（监听构建完成信息）
 setTimeout(() => {
   console.log('\n🔄 Step 2: Core library is building, starting plugins...\n')
@@ -33,7 +39,7 @@ setTimeout(() => {
   })
 
   // 处理进程退出
-  const processes: ChildProcess[] = [coreProcess, chromeProcess, mastergoProcess]
+  const processes: ChildProcess[] = [coreProcess, webTesterProcess, chromeProcess, mastergoProcess]
 
   // 当任何一个进程退出时，终止所有进程
   processes.forEach((proc) => {

@@ -6,6 +6,7 @@ export enum PluginMessage {
 // UI发出的消息
 export enum UIMessage {
   GET_SELECTION = 'GET_SELECTION',
+  DRAW_NODE_OVERLAYS = 'DRAW_NODE_OVERLAYS',
 }
 
 interface MessageType {

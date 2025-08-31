@@ -26,3 +26,4 @@
 运行命令：pnpm dev/build/clean
 
 - 用户遇到前端List渲染导致的DOM节点与设计稿节点位置差异问题。前端使用map()等方法渲染列表时会产生额外包装元素或改变DOM层级结构，需要解决匹配算法的适应性问题。用户希望在新对话中详细说明具体情况。
+- Chrome插件manifest配置更新：添加本地开发环境支持，content*scripts的matches字段增加了'http://localhost:*/\_'和'http://127.0.0.1:*/*'，解决web-tester本地测试时插件content script无法注入的问题

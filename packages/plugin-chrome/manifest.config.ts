@@ -20,7 +20,7 @@ export default defineManifest({
   },
   content_scripts: [{
     js: ['src/content/main.tsx'],
-    matches: ['https://*/*'],
+    matches: ['https://*/*', 'http://localhost:*/*', 'http://127.0.0.1:*/*'],
   }],
   permissions: [
     'activeTab',

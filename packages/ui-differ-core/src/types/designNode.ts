@@ -18,3 +18,10 @@ export const nodeWithChildSet = new Set<SceneNode['type']>(['FRAME', 'COMPONENT'
 export const nodeNoChildSet = new Set<SceneNode['type']>(['BOOLEAN_OPERATION', 'CONNECTOR', 'ELLIPSE', 'LINE', 'PEN', 'POLYGON', 'RECTANGLE', 'SLICE', 'STAR', 'TEXT'])
 
 export const DESIGN_NODE_PREFIX = '~$$MASTER_GO_UI_DIFFER_NODE_INFO$$~'
+
+export interface RootNodeOffsetInfo {
+  x: number
+  y: number
+  height: number
+  id: string
+}
