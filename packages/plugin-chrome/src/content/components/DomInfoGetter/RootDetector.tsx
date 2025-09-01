@@ -105,7 +105,7 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
         <Flex vertical gap={4} justify="center">
           <Typography.Text>您的HTML根节点为：</Typography.Text>
           <Space.Compact>
-            <Tag color="lime" className={styles.defaultNodeTag}>{targetRootNode.className}</Tag>
+            <Tag color="lime" className={styles.defaultNodeTag}>{targetRootNode.className || '[未设置className]'}</Tag>
           </Space.Compact>
           <Flex justify="end" gap={4}>
             <Button type="primary" onClick={handleStartUiDiff}>

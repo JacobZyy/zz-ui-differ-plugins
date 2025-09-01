@@ -1,6 +1,5 @@
 import type { DiffResultInfo } from '@ui-differ/core'
-import { useRequest } from 'ahooks'
-import { Spin } from 'antd'
+import { useEffect } from 'react'
 import useFabric from '@/hooks/useFabirc'
 
 const canvasId = 'result-canvas'
@@ -27,19 +26,12 @@ export default function ResultRenderer({ diffResultInfo, screenShotHeight, scree
       return
     await fabricHandler.onInitCanvas()
     const resultImage = await fabricHandler.handleGenerateImages()
-    console.log('🚀 ~ handleGetRenderResult ~ resultImage:', resultImage)
-    return resultImage
+    onFinishResult(resultImage)
   }
 
-  const request = useRequest(handleGetRenderResult, {
-    onSuccess: (resultImage) => {
-      onFinishResult(resultImage)
-    },
-  })
+  useEffect(() => {
+    handleGetRenderResult()
+  }, [])
 
-  return (
-    <Spin spinning={request.loading}>
-      <canvas id={canvasId} />
-    </Spin>
-  )
+  return <canvas id={canvasId} />
 }

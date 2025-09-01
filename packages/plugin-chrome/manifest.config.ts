@@ -3,7 +3,7 @@ import pkg from './package.json'
 
 export default defineManifest({
   manifest_version: 3,
-  name: pkg.name,
+  name: '转转ui自动化走查工具',
   version: pkg.version,
   icons: {
     48: 'public/logo.png',
@@ -20,7 +20,7 @@ export default defineManifest({
   },
   content_scripts: [{
     js: ['src/content/main.tsx'],
-    matches: ['https://*/*', 'http://localhost:*/*', 'http://127.0.0.1:*/*'],
+    matches: ['https://*.zhuanzhuan.com/*', 'http://localhost:*/*', 'http://127.0.0.1:*/*'],
   }],
   permissions: [
     'activeTab',

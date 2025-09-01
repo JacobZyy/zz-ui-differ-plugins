@@ -15,6 +15,7 @@ import {
 } from '@ui-differ/core'
 import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
 import { useRef, useState } from 'react'
+import Draggable from 'react-draggable'
 import { ChromeMessageType } from '@/types'
 import { chromeMessageSender, generateScreenShot } from '@/utils'
 import { diffResultFilterRules } from '@/utils/diffResultFilterRules'
@@ -134,6 +135,7 @@ export default function DomInfoGetter() {
   /** 关闭 情况弹窗 */
   const handleCloseModal = () => {
     setIsModalOpen(false)
+    handleResetDeviceEmulation()
   }
 
   /** 关闭 结果弹窗 */
@@ -158,7 +160,7 @@ export default function DomInfoGetter() {
   /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
     // 直接关闭弹窗
-    handleCloseModal()
+    setIsModalOpen(false)
     // 等待关闭后继续
     await new Promise(resolve => setTimeout(resolve, 1000))
     await handleDomNodePreProcessChain(rootNode)
@@ -183,7 +185,8 @@ export default function DomInfoGetter() {
     // 缓存截图信息
     setScreenShotInfo(imageResultInfo)
     setDiffResultInfo(filteredCorrectDiffResult)
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    await new Promise(resolve => setTimeout(resolve, 500))
+    await handleResetDeviceEmulation()
     setIsResultModalOpen(true)
   }
 
@@ -224,7 +227,6 @@ export default function DomInfoGetter() {
   }
 
   const handleFinishResult = async (resultImage?: string) => {
-    setIsResultModalOpen(false)
     //  结果组装
     const resultData = {
       screenShot: screenShotInfo.imgUrl,
@@ -234,8 +236,10 @@ export default function DomInfoGetter() {
       designNodeList: Array.from(designNodeInfo.current.values()),
       pageUrl: location.href,
     }
-    const resultJSON = JSON.stringify(resultData)
+    const resultJSON = JSON.stringify(resultData, null, 2)
     await navigator.clipboard.writeText(resultJSON)
+    await new Promise(resolve => setTimeout(resolve, 500))
+    setIsResultModalOpen(false)
     await modalApi.success({
       title: '自动走查完成',
       content: '结果已复制到剪切板，点击链接提交结果',
@@ -259,12 +263,14 @@ export default function DomInfoGetter() {
     <>
       {contextHolder}
       {modalContextHolder}
-      <FloatButton
-        className={styles.floatButton}
-        icon={<span className="ui-differ-icon" />}
-        type="default"
-        onClick={handleOpenModal}
-      />
+      <Draggable>
+        <FloatButton
+          className={styles.floatButton}
+          icon={<span className="ui-differ-icon" />}
+          type="default"
+          onClick={handleOpenModal}
+        />
+      </Draggable>
 
       <Modal
         title="Dom节点检测"
