@@ -1,5 +1,5 @@
 {
-  "name": "ui-differ-plugin-master-go",
+  "name": "转转UI自动化走查工具",
   "id": 168177384255677,
   "main": "dist/main.js",
   "ui": "dist/index.html",
