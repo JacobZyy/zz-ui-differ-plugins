@@ -23,3 +23,17 @@
   margin: 0;
   width: fit-content;
 }
+
+.ui-differ-result-modal {
+  :global {
+    .ant-modal {
+      max-width: 100vw;
+    }
+    .ant-modal-content {
+      padding-inline: 0;
+    }
+    .ant-modal-title {
+      padding-inline: 16px;
+    }
+  }
+}

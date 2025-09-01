@@ -12,7 +12,7 @@ export const SAFE_BOTTOM_HEIGHT = 68
 function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: number, y: number, id: UniqueId }, designNodeParentSiblingMap: Map<UniqueId, Pick<NodeInfo, 'parentId' | 'sibling'>>) {
   const nodeId = designNode.id
   // 在上方已经进行过滤了
-  const boundingRect = designNode.absoluteRenderBounds!
+  const boundingRect = designNode.absoluteBoundingBox!
   const realBoundingRect: BoundingRect = {
     x: convertDesignToPx(boundingRect.x - rootOffset.x),
     // 算y的时候需要把手机头的高度去掉
@@ -53,7 +53,7 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
 
 export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
   const floorOrderNodeList = Array.from(floorOrderTraversalWithNode(rootDesignNode))
-  const rootDesignNodeBoundingRect = rootDesignNode.absoluteRenderBounds
+  const rootDesignNodeBoundingRect = rootDesignNode.absoluteBoundingBox
   console.log('🚀 ~ getDesignInfoRecorder ~ rootDesignNodeBoundingRect:', rootDesignNodeBoundingRect)
   const rootNodeBoundingOffset = {
     x: rootDesignNodeBoundingRect?.x || 0,
@@ -66,7 +66,7 @@ export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
 
   const flatNodeMapEntries = floorOrderNodeList
     .filter((designNode) => {
-      const realBoundingRect = designNode.absoluteRenderBounds
+      const realBoundingRect = designNode.absoluteBoundingBox
       if (!realBoundingRect || !designNode.id)
         // 没有渲染的节点，或者没有id的节点，直接过滤掉
         return false

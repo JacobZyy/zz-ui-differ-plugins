@@ -1,4 +1,4 @@
-import type { NodeInfo, UniqueId } from '@ui-differ/core'
+import type { DiffResultInfo, NodeInfo, UniqueId } from '@ui-differ/core'
 import chalk from '@alita/chalk'
 import {
   DESIGN_NODE_PREFIX,
@@ -13,18 +13,31 @@ import {
   shrinkRectBounding,
   uiDiff,
 } from '@ui-differ/core'
-import { Button, FloatButton, message, Modal, Space, Spin } from 'antd'
-import { useState } from 'react'
+import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
+import { useRef, useState } from 'react'
 import { ChromeMessageType } from '@/types'
-import { chromeMessageSender } from '@/utils'
+import { chromeMessageSender, generateScreenShot } from '@/utils'
+import { diffResultFilterRules } from '@/utils/diffResultFilterRules'
 import { drawCurrentNodeInfos } from '@/utils/drawCurrentNodeInfos'
 import styles from './index.module.scss'
+import ResultRenderer from './ResultRenderer'
 import RootDetector from './RootDetector'
 
 export default function DomInfoGetter() {
   const [messageApi, contextHolder] = message.useMessage({ maxCount: 1 })
+  const [modalApi, modalContextHolder] = Modal.useModal()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [designNodeInfo, setDesignNodeInfo] = useState<Map<UniqueId, NodeInfo>>(new Map())
+  const [isResultModalOpen, setIsResultModalOpen] = useState(false)
+  const [screenShotInfo, setScreenShotInfo] = useState<{ imgUrl: string, width: number, height: number }>({
+    imgUrl: '',
+    width: 0,
+    height: 0,
+  })
+  // 比对结果
+  const [diffResultInfo, setDiffResultInfo] = useState<DiffResultInfo[]>([])
+  // 设计稿节点信息
+  const designNodeInfo = useRef<Map<UniqueId, NodeInfo>>(new Map())
+  const flatNodeMap = useRef<Map<UniqueId, NodeInfo>>(new Map())
   const [clipboardLoading, setClipboardLoading] = useState(false)
 
   /** 获取剪切板内容 */
@@ -59,8 +72,7 @@ export default function DomInfoGetter() {
       }
 
       const entries = nodeList.map((item: NodeInfo) => [item.uniqueId, item] as const)
-      const designNodeInfo = new Map<UniqueId, NodeInfo>(entries)
-      setDesignNodeInfo(designNodeInfo)
+      designNodeInfo.current = new Map<UniqueId, NodeInfo>(entries)
     }
     catch (error) {
       console.error(error)
@@ -107,8 +119,8 @@ export default function DomInfoGetter() {
     try {
       setIsModalOpen(true)
       setClipboardLoading(true)
-      // await handleChangeWindowSize()
-      // await handleGetClipboardContent()
+      await handleChangeWindowSize()
+      await handleGetClipboardContent()
     }
     catch (error) {
       console.error(error)
@@ -124,50 +136,55 @@ export default function DomInfoGetter() {
     setIsModalOpen(false)
   }
 
-  // /** 获取屏幕截图 */
-  // const handleGetScreenShot = async () => {
-  //   const { imgUrl: screenShot, width, height } = await generateScreenShot()
-  //   return {
-  //     screenShot,
-  //     documentSize: { width, height },
-  //   }
-  // }
+  /** 关闭 结果弹窗 */
+  const handleCloseResultModal = () => {
+    setIsResultModalOpen(false)
+  }
 
   /**
    * dom节点信息链式处理
    */
   const handleDomNodePreProcessChain = async (rootNode: HTMLElement) => {
-    const flatNodeMap = await onDomInfoRecorder(rootNode)
+    flatNodeMap.current = await onDomInfoRecorder(rootNode)
       .then(searchNeighborNodesInitial)
       .then(processMarginCollapsing)
       .then(processPaddingInfo)
       .then(removeSameSizePositionChildren)
       .then(searchNeighborNodes)
       .then(getNeighborNodeDistance)
-      .then(nodeMap => recordHybridNodeMatchResult(nodeMap, designNodeInfo))
-    return flatNodeMap
+      .then(nodeMap => recordHybridNodeMatchResult(nodeMap, designNodeInfo.current))
   }
 
   /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
-    const flatNodeMap = await handleDomNodePreProcessChain(rootNode)
-    console.log('🚀 ~ handleStartUiDiff ~ flatNodeMap:', flatNodeMap)
-
-    const diffResult = uiDiff(flatNodeMap, designNodeInfo)
-    diffResult.forEach((resultItem) => {
-      const { originNode, designNode, distanceResult } = resultItem
-      const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
-      const designNodeName = designNode.nodeName
-      chalk.info('========dom节点:========\n')
-      console.info(nodeEl)
-      console.info(originNode)
-      chalk.info(`========设计稿节点:${designNodeName}========\n`)
-      console.info(designNode)
-      chalk.info(`========比对结果:========\n`)
-      console.info(distanceResult)
-      chalk.info('-------------------------\n')
-    })
-    // await handleGetScreenShot()
+    // 直接关闭弹窗
+    handleCloseModal()
+    // 等待关闭后继续
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    await handleDomNodePreProcessChain(rootNode)
+    const diffResult = uiDiff(flatNodeMap.current, designNodeInfo.current)
+    const filteredCorrectDiffResult = diffResult.filter(diffResultFilterRules)
+    if (__DEV__) {
+      filteredCorrectDiffResult.forEach((resultItem) => {
+        const { originNode, designNode, distanceResult } = resultItem
+        const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
+        const designNodeName = designNode.nodeName
+        chalk.info('========dom节点:========\n')
+        console.info(nodeEl)
+        console.info(originNode)
+        chalk.info(`========设计稿节点:${designNodeName}========\n`)
+        console.info(designNode)
+        chalk.info(`========比对结果:========\n`)
+        console.info(distanceResult)
+        chalk.info('-------------------------\n')
+      })
+    }
+    const imageResultInfo = await generateScreenShot()
+    // 缓存截图信息
+    setScreenShotInfo(imageResultInfo)
+    setDiffResultInfo(filteredCorrectDiffResult)
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    setIsResultModalOpen(true)
   }
 
   const handleTestDomNodeProcessor = async () => {
@@ -176,57 +193,72 @@ export default function DomInfoGetter() {
       return
     const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)
     const initiedFlatNodeMapWithInitialNeighborInfos = searchNeighborNodesInitial(initiedFlatNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ initiedFlatNodeMapWithInitialNeighborInfos:', initiedFlatNodeMapWithInitialNeighborInfos)
     // 处理margin collapse问题
     const marginCollapsedFlatNodeMap = processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
-    console.log('🚀 ~ handleStartUiDiff ~ marginCollapsedFlatNodeMap:', marginCollapsedFlatNodeMap)
     // 合并无效padding
     const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
     const boundingRectShrinkedNodeMap = shrinkRectBounding(paddingMergedFlatNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ boundingRectShrinkedNodeMap:', boundingRectShrinkedNodeMap)
     // 移除相同尺寸、位置的子节点
     const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(boundingRectShrinkedNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenFlatNodeMap:', removedSameSizePositionChildrenFlatNodeMap)
     // 搜索邻居节点
     const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap:', flatNodeMap)
 
     drawCurrentNodeInfos(flatNodeMap)
 
-    const targetEl = document.querySelector('.z-nav-bar')
-    const targetId = targetEl?.getAttribute('unique-id')
-    const targetChildEl = targetEl?.querySelector('.z-nav-bar__left')
-    const targetChildId = targetChildEl?.getAttribute('unique-id')
-    if (!targetChildId || !targetId)
-      return
-    const initNode = initiedFlatNodeMap.get(targetId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ targetId:', targetId)
-    const initChildNode = initiedFlatNodeMap.get(targetChildId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ targetChildId:', targetChildId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ initNode:', initNode?.boundingRect, initNode?.paddingInfo)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ initChildNode:', initChildNode?.boundingRect, initChildNode?.paddingInfo)
-    const marginCollapsedNode = marginCollapsedFlatNodeMap.get(targetId)
-    const marginCollapsedChildNode = marginCollapsedFlatNodeMap.get(targetChildId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ marginCollapsedNode:', marginCollapsedNode?.boundingRect, marginCollapsedNode?.paddingInfo)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ marginCollapsedChildNode:', marginCollapsedChildNode?.boundingRect, marginCollapsedChildNode?.paddingInfo)
-    const paddingMergedNode = paddingMergedFlatNodeMap.get(targetId)
-    const paddingMergedChildNode = paddingMergedFlatNodeMap.get(targetChildId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedNode:', paddingMergedNode?.boundingRect, paddingMergedNode?.paddingInfo)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedChildNode:', paddingMergedChildNode?.boundingRect, paddingMergedChildNode?.paddingInfo)
-    const removedSameSizePositionChildrenNode = removedSameSizePositionChildrenFlatNodeMap.get(targetId)
-    const removedSameSizePositionChildrenChildNode = removedSameSizePositionChildrenFlatNodeMap.get(targetChildId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenNode:', removedSameSizePositionChildrenNode?.boundingRect, removedSameSizePositionChildrenNode?.paddingInfo)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ removedSameSizePositionChildrenChildNode:', removedSameSizePositionChildrenChildNode?.boundingRect, removedSameSizePositionChildrenChildNode?.paddingInfo)
-    const flatNode = flatNodeMap.get(targetId)
-    const flatChildNode = flatNodeMap.get(targetChildId)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNode:', flatNode?.boundingRect, flatNode?.paddingInfo)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ flatChildNode:', flatChildNode?.boundingRect, flatChildNode?.paddingInfo)
+    // const targetEl = document.querySelector('.z-nav-bar')
+    // const targetId = targetEl?.getAttribute('unique-id')
+    // const targetChildEl = targetEl?.querySelector('.z-nav-bar__left')
+    // const targetChildId = targetChildEl?.getAttribute('unique-id')
+    // if (!targetChildId || !targetId)
+    //   return
+    // const initNode = initiedFlatNodeMap.get(targetId)
+    // const initChildNode = initiedFlatNodeMap.get(targetChildId)
+    // const marginCollapsedNode = marginCollapsedFlatNodeMap.get(targetId)
+    // const marginCollapsedChildNode = marginCollapsedFlatNodeMap.get(targetChildId)
+    // const paddingMergedNode = paddingMergedFlatNodeMap.get(targetId)
+    // const paddingMergedChildNode = paddingMergedFlatNodeMap.get(targetChildId)
+    // const removedSameSizePositionChildrenNode = removedSameSizePositionChildrenFlatNodeMap.get(targetId)
+    // const removedSameSizePositionChildrenChildNode = removedSameSizePositionChildrenFlatNodeMap.get(targetChildId)
+    // const flatNode = flatNodeMap.get(targetId)
+    // const flatChildNode = flatNodeMap.get(targetChildId)
+  }
+
+  const handleFinishResult = async (resultImage?: string) => {
+    setIsResultModalOpen(false)
+    //  结果组装
+    const resultData = {
+      screenShot: screenShotInfo.imgUrl,
+      resultImage,
+      diffResultInfo,
+      domNodeList: Array.from(flatNodeMap.current.values()),
+      designNodeList: Array.from(designNodeInfo.current.values()),
+      pageUrl: location.href,
+    }
+    const resultJSON = JSON.stringify(resultData)
+    await navigator.clipboard.writeText(resultJSON)
+    await modalApi.success({
+      title: '自动走查完成',
+      content: '结果已复制到剪切板，点击链接提交结果',
+      okText: '去提交',
+    })
+    window.open('https://doc.weixin.qq.com/smartsheet/form/1_wpnn3gDAAARYuiUwJ_LnVQrdgd81PAPw_a8bcdd')
+  }
+
+  const handleTestCanvas = () => {
+    const imageResultInfo = {
+      imgUrl: 'https://pic2.zhuanstatic.com/zhuanzh/0296d4c8-0822-44ee-a53c-1a4e9a14481b.png',
+      width: 375,
+      height: 1623,
+    }
+    // 缓存截图信息
+    setScreenShotInfo(imageResultInfo)
+    setIsResultModalOpen(true)
   }
 
   return (
     <>
       {contextHolder}
+      {modalContextHolder}
       <FloatButton
         className={styles.floatButton}
         icon={<span className="ui-differ-icon" />}
@@ -246,25 +278,50 @@ export default function DomInfoGetter() {
       >
         <Spin spinning={clipboardLoading} tip="读取剪切板信息中...">
           <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+          {!!__DEV__ && (
+            <Flex wrap gap={16}>
+              <Button variant="filled" color="magenta" onClick={handleResetDeviceEmulation}>
+                重置设备模拟
+              </Button>
+              <Button variant="filled" color="gold" onClick={handleChangeWindowSize}>
+                调整设备模拟
+              </Button>
 
-          <Space.Compact>
-            <Button variant="filled" color="cyan" onClick={handleResetDeviceEmulation}>
-              重置设备模拟
-            </Button>
-            <Button variant="filled" color="gold" onClick={handleChangeWindowSize}>
-              调整设备模拟
-            </Button>
-          </Space.Compact>
-          <Space.Compact>
-            <Button variant="filled" color="lime" onClick={handleGetClipboardContent}>
-              获取剪切板内容
-            </Button>
-            <Button variant="filled" color="red" onClick={handleTestDomNodeProcessor}>
-              dom数据处理测试
-            </Button>
-          </Space.Compact>
+              <Button variant="filled" color="blue" onClick={handleGetClipboardContent}>
+                获取剪切板内容
+              </Button>
+              <Button variant="filled" color="red" onClick={handleTestDomNodeProcessor}>
+                dom数据处理测试
+              </Button>
+              <Button variant="filled" color="volcano" onClick={handleTestCanvas}>
+                canvas测试
+              </Button>
+
+            </Flex>
+          )}
         </Spin>
       </Modal>
+
+      <Modal
+        title="DOM节点检测结果展示"
+        rootClassName={styles.uiDifferResultModal}
+        open={isResultModalOpen}
+        onCancel={handleCloseResultModal}
+        footer={null}
+        maskClosable={false}
+        width={800}
+        centered
+        destroyOnHidden
+      >
+        <ResultRenderer
+          onFinishResult={handleFinishResult}
+          diffResultInfo={diffResultInfo}
+          screenShotHeight={screenShotInfo.height}
+          screenShotWidth={screenShotInfo.width}
+          screenShot={screenShotInfo.imgUrl}
+        />
+      </Modal>
+
     </>
   )
 }

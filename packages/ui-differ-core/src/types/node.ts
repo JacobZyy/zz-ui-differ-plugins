@@ -39,7 +39,11 @@ export interface MatchResult {
   overlapRatio: number
 }
 
-export interface NeighborMarginInfo { isParent: boolean, value: number }
+export interface NeighborMarginInfo {
+  isParent: boolean
+  value: number
+  isDirectlySibling: boolean
+}
 
 /**
  * 节点信息

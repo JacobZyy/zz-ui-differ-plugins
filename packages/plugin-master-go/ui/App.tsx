@@ -49,8 +49,9 @@ function App() {
 
   // const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
   //   return getDesignInfoRecorder(rootNode)
-  //     .then(reOrderDesignNodes)
+  //     .then(({ initialNodeMap: designInfoRecorder }) => reOrderDesignNodes(designInfoRecorder))
   //     .then(processPaddingInfo)
+  //     .then(shrinkRectBounding)
   //     .then(removeSameSizePositionChildren)
   //     .then(searchNeighborNodes)
   //     .then(getNeighborNodeDistance)
@@ -67,7 +68,6 @@ function App() {
         return
       }
       const flatNodeMap = await handleDesignNodePreProcessChain(data[0])
-      console.log('🚀 ~ App ~ flatNodeMap:', flatNodeMap)
       setSelectedNode(Object.fromEntries(flatNodeMap.entries()))
     }
   })
@@ -102,7 +102,6 @@ function App() {
   }
 
   const copyText = `${DESIGN_NODE_PREFIX}${JSON.stringify(Object.values(selectedNode), null, 2)}`
-
   return (
     <div className="app">
       <ReactJson src={originNode || {}} />
@@ -114,7 +113,7 @@ function App() {
           绘制节点
         </Button>
       </Space.Compact>
-      <ReactJson src={selectedNode} />
+      <ReactJson src={selectedNode} collapsed theme="solarized" />
     </div>
   )
 }

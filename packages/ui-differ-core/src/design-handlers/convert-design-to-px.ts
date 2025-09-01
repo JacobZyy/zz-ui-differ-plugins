@@ -12,3 +12,5 @@ export function convertDesignToPx(designPx: number) {
   const remValue = Math.round(originRemValue * 100) / 100
   return Math.round(remValue * DOM_DEFAULT_WIDTH)
 }
+
+console.log(convertDesignToPx(32))

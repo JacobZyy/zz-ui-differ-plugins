@@ -63,6 +63,9 @@ export default defineConfig(() => {
   const plugins = target === 'ui' ? uiPlugins : []
 
   const config: UserConfig = {
+    define: {
+      __DEV__: process.env.NODE_ENV === 'development',
+    },
     plugins: [
       react(),
       copyManifestPlugin(),

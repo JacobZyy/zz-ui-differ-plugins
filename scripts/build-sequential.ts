@@ -4,12 +4,16 @@ import process from 'node:process'
 
 console.log('🏗️ Starting UI Differ build in sequential mode...\n')
 
+// 设置生产环境变量
+process.env.NODE_ENV = 'production'
+
 // 启动 core 包的构建
 console.log('📦 Step 1: Building Core Library...')
 const coreProcess = spawn('pnpm', ['--filter', '@ui-differ/core', 'build'], {
   stdio: 'inherit',
   shell: true,
   cwd: process.cwd(),
+  env: { ...process.env, NODE_ENV: 'production' },
 })
 
 coreProcess.on('exit', (code) => {
@@ -26,12 +30,14 @@ coreProcess.on('exit', (code) => {
     stdio: 'inherit',
     shell: true,
     cwd: process.cwd(),
+    env: { ...process.env, NODE_ENV: 'production' },
   })
 
   const mastergoProcess = spawn('pnpm', ['--filter', '@ui-differ/plugin-master-go', 'build'], {
     stdio: 'inherit',
     shell: true,
     cwd: process.cwd(),
+    env: { ...process.env, NODE_ENV: 'production' },
   })
 
   const processes: ChildProcess[] = [chromeProcess, mastergoProcess]

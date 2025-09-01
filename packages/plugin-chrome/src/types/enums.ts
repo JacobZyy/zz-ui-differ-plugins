@@ -8,3 +8,6 @@ export enum ChromeMessageType {
    */
   RESET_DEVICE_EMULATION = 'RESET_DEVICE_EMULATION',
 }
+
+export const DEFAULT_PAGE_WIDTH = 375
+export const DEFAULT_PAGE_HEIGHT = 734

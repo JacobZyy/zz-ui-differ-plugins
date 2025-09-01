@@ -4,6 +4,7 @@ import { getDomBackgroundColor, getDomBorderInfo, getDomIsBfc, getDomPaddingInfo
 
 function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
   const nodeId = domNode.getAttribute('unique-id')
+  const computedStyle = window.getComputedStyle(domNode)
   if (!nodeId)
     return
   const boundingRect = domNode.getBoundingClientRect()
@@ -15,6 +16,15 @@ function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
     y: boundingRect.y + window.scrollY,
     width: boundingRect.width,
     height: fixedHeight,
+  }
+  const isInlineNode = computedStyle.display === 'inline'
+
+  if (isInlineNode) {
+    const lineHeight = computedStyle.lineHeight
+    const lineHeightValue = Number(lineHeight.replace('px', ''))
+    realBoundingRect.height = Math.round(lineHeightValue)
+    const fixedY = (fixedHeight - lineHeightValue) / 2 + realBoundingRect.y
+    realBoundingRect.y = fixedY
   }
 
   const nodeName = `.${Array.from(domNode.classList).join('.')}`

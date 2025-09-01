@@ -4,18 +4,23 @@ import process from 'node:process'
 
 console.log('🚀 Starting UI Differ development in sequential mode...\n')
 
+// 设置开发环境变量
+process.env.NODE_ENV = 'development'
+
 // 启动 core 包的 dev 模式
 console.log('📦 Step 1: Starting Core Library...')
 const coreProcess = spawn('pnpm', ['dev:core'], {
   stdio: 'inherit',
   shell: true,
   cwd: process.cwd(),
+  env: { ...process.env, NODE_ENV: 'development' },
 })
 
 const webTesterProcess = spawn('pnpm', ['dev:web-tester'], {
   stdio: 'inherit',
   shell: true,
   cwd: process.cwd(),
+  env: { ...process.env, NODE_ENV: 'development' },
 })
 
 // 等待 core 包启动完成（监听构建完成信息）
@@ -28,6 +33,7 @@ setTimeout(() => {
     stdio: 'inherit',
     shell: true,
     cwd: process.cwd(),
+    env: { ...process.env, NODE_ENV: 'development' },
   })
 
   // 启动 MasterGo 插件
@@ -36,6 +42,7 @@ setTimeout(() => {
     stdio: 'inherit',
     shell: true,
     cwd: process.cwd(),
+    env: { ...process.env, NODE_ENV: 'development' },
   })
 
   // 处理进程退出

@@ -1,3 +1,4 @@
+import type { Plugin } from 'vite'
 import { resolve } from 'node:path'
 import process from 'node:process'
 import { defineConfig } from 'vite'
@@ -5,6 +6,9 @@ import dts from 'vite-plugin-dts'
 import pkg from './package.json'
 
 export default defineConfig({
+  define: {
+    __DEV__: process.env.NODE_ENV === 'development',
+  },
   plugins: [
     dts({
       // 生成类型声明文件
@@ -13,7 +17,7 @@ export default defineConfig({
       include: ['src/**/*'],
       // 排除测试文件等
       exclude: ['**/*.test.*', '**/*.spec.*'],
-    }),
+    }) as Plugin,
   ],
   build: {
     lib: {

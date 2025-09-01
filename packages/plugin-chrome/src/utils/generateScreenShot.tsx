@@ -30,13 +30,12 @@ export async function generateScreenShot() {
       windowHeight: height,
       windowWidth: width,
       backgroundColor: '#fff',
-      scale: window.devicePixelRatio,
+      scale: 1,
       logging: false,
       useCORS: true,
       // 允许截取整个滚动区域
       scrollY: -window.scrollY,
       scrollX: -window.scrollX,
-
     })
 
     // 转换为base64

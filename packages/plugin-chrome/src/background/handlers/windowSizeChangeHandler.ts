@@ -1,4 +1,5 @@
 import type { ChromeListenerMsgProcessorParams, ChromeListenerMsgResponse } from '@/types/message'
+import { DEFAULT_PAGE_HEIGHT, DEFAULT_PAGE_WIDTH } from '@/types'
 /**
  * 设备模拟配置接口
  */
@@ -21,10 +22,10 @@ export async function handleChangeWindowSize(configs: ChromeListenerMsgProcessor
       return { success: false, message: '无法获取标签页ID', data: null }
     }
 
-    // 设备模拟配置：iPhone 13 Pro类似尺寸
+    // 设备模拟配置：单倍图尺寸
     const deviceConfig: IDeviceEmulationConfig = {
-      width: 375,
-      height: 734,
+      width: DEFAULT_PAGE_WIDTH,
+      height: DEFAULT_PAGE_HEIGHT,
       deviceScaleFactor: 2.0, // 高密度屏幕
       mobile: true,
       userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',

@@ -1,5 +1,6 @@
 import type { Options } from 'vite-plugin-zip-pack'
 import path from 'node:path'
+import process from 'node:process'
 import { crx } from '@crxjs/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -15,6 +16,9 @@ const zipPluginOptions: Options = {
 }
 
 export default defineConfig({
+  define: {
+    __DEV__: process.env.NODE_ENV === 'development',
+  },
   resolve: {
     alias: {
       '@': `${path.resolve(__dirname, 'src')}`,

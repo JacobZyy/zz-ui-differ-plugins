@@ -56,12 +56,12 @@ function wrapTextNodeWithSpan(textNode: Text, parentElement: Element): void {
   // 创建包装的 span 元素
   const wrapper = document.createElement('span')
   wrapper.setAttribute('unique-id', v4())
-  wrapper.setAttribute('data-text-wrapper', 'true') // 标记这是文本包装器
+  wrapper.setAttribute('data-text-wrapper', '1') // 标记这是文本包装器
 
   // 使用内联样式重置所有可能影响文本显示的样式属性
   // 这样可以确保 span 不会改变文本的任何视觉表现
   wrapper.style.cssText = `
-    display: inline-block !important;
+    display: inline !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
@@ -87,7 +87,7 @@ function wrapTextNodeWithSpan(textNode: Text, parentElement: Element): void {
     transform: none !important;
     transition: none !important;
     animation: none !important;
-    lineHeight: 1em !important;
+    line-height: 1em !important;
   `.replace(/\s+/g, ' ').trim()
 
   // 将文本节点移动到 span 中
