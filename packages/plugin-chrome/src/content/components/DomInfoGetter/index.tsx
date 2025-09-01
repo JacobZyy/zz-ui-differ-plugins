@@ -1,4 +1,5 @@
 import type { NodeInfo, UniqueId } from '@ui-differ/core'
+import chalk from '@alita/chalk'
 import {
   DESIGN_NODE_PREFIX,
   getNeighborNodeDistance,
@@ -153,16 +154,19 @@ export default function DomInfoGetter() {
     console.log('🚀 ~ handleStartUiDiff ~ flatNodeMap:', flatNodeMap)
 
     const diffResult = uiDiff(flatNodeMap, designNodeInfo)
-    // diffResult.forEach((resultItem) => {
-    //   const { originNode, designNode, distanceResult } = resultItem
-    //   const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
-    //   const designNodeName = designNode.nodeName
-    //   chalk.info('========dom节点:========\n')
-    //   console.info(nodeEl)
-    //   chalk.info(`========设计稿节点:${designNodeName}========\n`)
-    //   console.info(distanceResult)
-    //   chalk.info('-------------------------\n')
-    // })
+    diffResult.forEach((resultItem) => {
+      const { originNode, designNode, distanceResult } = resultItem
+      const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
+      const designNodeName = designNode.nodeName
+      chalk.info('========dom节点:========\n')
+      console.info(nodeEl)
+      console.info(originNode)
+      chalk.info(`========设计稿节点:${designNodeName}========\n`)
+      console.info(designNode)
+      chalk.info(`========比对结果:========\n`)
+      console.info(distanceResult)
+      chalk.info('-------------------------\n')
+    })
     // await handleGetScreenShot()
   }
 

@@ -1,3 +1,4 @@
+import type { DistanceResult } from './diffResult'
 import { SiblingPosition } from './enums'
 
 export type UniqueId = string
@@ -36,8 +37,9 @@ export interface MatchResult {
   confidence: number
   centerDistance: number
   overlapRatio: number
-  offsetCorrected: boolean
 }
+
+export interface NeighborMarginInfo { isParent: boolean, value: number }
 
 /**
  * 节点信息
@@ -60,7 +62,7 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   /** 背景色 */
   backgroundColor: string
   /** 相邻节点的边距 */
-  neighborMarginInfo: Partial<Record<SiblingPosition, number>>
+  neighborMarginInfo: Partial<Record<SiblingPosition, NeighborMarginInfo>>
   /**
    * 是否是bfc元素
    * @default false
@@ -96,6 +98,23 @@ export const currentNodeToSiblingPositionMap: Record<SiblingPosition, SiblingPos
   [SiblingPosition.BOTTOM_LEFT]: SiblingPosition.TOP_RIGHT,
   [SiblingPosition.BOTTOM_RIGHT]: SiblingPosition.TOP_LEFT,
   [SiblingPosition.NONE]: SiblingPosition.NONE,
+}
+
+export const siblingPositionToDiffResultKey: Record<SiblingPosition, keyof DistanceResult> = {
+  [SiblingPosition.TOP]: 'marginTop',
+  [SiblingPosition.BOTTOM]: 'marginBottom',
+  [SiblingPosition.LEFT]: 'marginLeft',
+  [SiblingPosition.RIGHT]: 'marginRight',
+  /** @deprecated 无效的兄弟节点位置 */
+  [SiblingPosition.TOP_LEFT]: 'marginTop',
+  /** @deprecated 无效的兄弟节点位置 */
+  [SiblingPosition.TOP_RIGHT]: 'marginTop',
+  /** @deprecated 无效的兄弟节点位置 */
+  [SiblingPosition.BOTTOM_LEFT]: 'marginBottom',
+  /** @deprecated 无效的兄弟节点位置 */
+  [SiblingPosition.BOTTOM_RIGHT]: 'marginBottom',
+  /** @deprecated 无效的兄弟节点位置 */
+  [SiblingPosition.NONE]: 'marginTop',
 }
 
 export const convertPositionToBoundingKeys: Record<SiblingPosition, (keyof BoundingRect)[]> = {

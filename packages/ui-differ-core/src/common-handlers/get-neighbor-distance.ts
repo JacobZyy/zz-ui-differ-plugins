@@ -76,13 +76,13 @@ export const getNeighborNodeDistance = produce((flatNodeMap: Map<UniqueId, NodeI
       const neighborNodeId = currentNodeInfo[direction]
       const neighborNodeInfo = flatNodeMap.get(neighborNodeId || '')
       if (!neighborNodeId || !neighborNodeInfo) {
-        currentNodeInfo.neighborMarginInfo[direction] = 0
+        currentNodeInfo.neighborMarginInfo[direction] = { isParent: false, value: 0 }
         return
       }
       const neighborNodeType = getIsSiblingOrParents(currentNodeInfo, neighborNodeId, flatNodeMap)
       const distanceCalculateFn = distanceCalculateFnMap[neighborNodeType]
       const distanceValue = distanceCalculateFn(currentNodeInfo, neighborNodeInfo, direction)
-      currentNodeInfo.neighborMarginInfo[direction] = distanceValue || 0
+      currentNodeInfo.neighborMarginInfo[direction] = { isParent: neighborNodeType === 'parent', value: distanceValue || 0 }
     })
   })
 })

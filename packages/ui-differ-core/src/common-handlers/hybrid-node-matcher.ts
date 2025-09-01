@@ -5,7 +5,6 @@ import { SiblingPosition } from '../types'
 interface OffsetCorrection {
   x: number
   y: number
-  confidence: number
 }
 
 interface MatchedPair {
@@ -17,7 +16,7 @@ interface MatchedPair {
 /**
  * 计算两个矩形的重叠面积比例 (IoU)
  */
-function calculateOverlapRatio(domRect: BoundingRect, designRect: BoundingRect, offset: OffsetCorrection = { x: 0, y: 0, confidence: 0 }): number {
+function calculateOverlapRatio(domRect: BoundingRect, designRect: BoundingRect, offset: OffsetCorrection): number {
   const correctedDesignRect = {
     x: designRect.x + offset.x,
     y: designRect.y + offset.y,
@@ -38,29 +37,22 @@ function calculateOverlapRatio(domRect: BoundingRect, designRect: BoundingRect, 
 
 /**
  * 计算中心点距离
+ * TODO: 处理dom节点上的数值误差问题 8.875 -> 9
  */
-function calculateCenterDistance(domRect: BoundingRect, designRect: BoundingRect, offset: OffsetCorrection = { x: 0, y: 0, confidence: 0 }): number {
+function calculateCenterDistance(domRect: BoundingRect, designRect: BoundingRect, offset: OffsetCorrection): number {
   const domCenterX = domRect.x + domRect.width / 2
   const domCenterY = domRect.y + domRect.height / 2
 
   const designCenterX = designRect.x + offset.x + designRect.width / 2
   const designCenterY = designRect.y + offset.y + designRect.height / 2
-
-  return Math.sqrt((domCenterX - designCenterX) ** 2 + (domCenterY - designCenterY) ** 2)
+  const deltaX = Math.abs(domCenterX - designCenterX)
+  const deltaY = Math.abs(domCenterY - designCenterY)
+  const squareDeltaX = deltaX * deltaX
+  const squareDeltaY = deltaY * deltaY
+  const squareDistance = squareDeltaX + squareDeltaY
+  const result = Math.sqrt(squareDistance)
+  return result
 }
-
-// /**
-//  * 检查设计稿节点是否在DOM父节点边界内
-//  */
-// function isWithinParentBounds(designNode: NodeInfo, domParent: NodeInfo, offset: OffsetCorrection = { x: 0, y: 0, confidence: 0 }): boolean {
-//   const { x, y } = designNode.boundingRect
-//   const correctedX = x + offset.x
-//   const correctedY = y + offset.y
-
-//   const { x: px, y: py, width: pw, height: ph } = domParent.boundingRect
-
-//   return correctedX >= px && correctedY >= py && correctedX <= px + pw && correctedY <= py + ph
-// }
 
 /**
  * 基于已匹配的相邻节点计算偏移量修正
@@ -72,91 +64,47 @@ function calculateOffsetFromNeighbors(
   const matchedMap = new Map(matchedPairs.map(pair => [pair.domNodeId, pair]))
 
   // 优先使用左侧节点的偏移量
-  const leftNeighborId = domNode[SiblingPosition.LEFT]
-  if (leftNeighborId) {
-    const matchedLeft = matchedMap.get(leftNeighborId)
-    if (matchedLeft) {
-      return {
-        x: matchedLeft.offset.x,
-        y: matchedLeft.offset.y,
-        confidence: 0.8,
-      }
-    }
-  }
+  const matchedLeftInfo = matchedMap.get(domNode[SiblingPosition.LEFT] || '')
+  const correctLeft = matchedLeftInfo?.offset.x || 0
 
   // 其次使用上方节点的偏移量
-  const topNeighborId = domNode[SiblingPosition.TOP]
-  if (topNeighborId) {
-    const matchedTop = matchedMap.get(topNeighborId)
-    if (matchedTop) {
-      return {
-        x: matchedTop.offset.x,
-        y: matchedTop.offset.y,
-        confidence: 0.7,
-      }
-    }
-  }
+  const matchedTopInfo = matchedMap.get(domNode[SiblingPosition.TOP] || '')
+  const correctTop = matchedTopInfo?.offset.y || 0
 
-  // 如果没有相邻节点匹配，使用平均偏移量
-  if (matchedPairs.length > 0) {
-    const avgOffsetX = matchedPairs.reduce((sum, pair) => sum + pair.offset.x, 0) / matchedPairs.length
-    const avgOffsetY = matchedPairs.reduce((sum, pair) => sum + pair.offset.y, 0) / matchedPairs.length
-
-    return {
-      x: avgOffsetX,
-      y: avgOffsetY,
-      confidence: 0.3,
-    }
-  }
-
-  return { x: 0, y: 0, confidence: 0 }
+  return { x: correctLeft, y: correctTop }
 }
 
 interface MatchSingleNodeOptions {
   domNode: NodeInfo
   designNodeMap: Map<UniqueId, NodeInfo>
-  domParentNode?: NodeInfo
   matchedPairs: MatchedPair[]
 }
 
 /**
  * 单个DOM节点的混合匹配
  */
-function matchSingleNode({ domNode, designNodeMap, domParentNode, matchedPairs }: MatchSingleNodeOptions): MatchResult | undefined {
+function matchSingleNode({ domNode, designNodeMap, matchedPairs }: MatchSingleNodeOptions): MatchResult | undefined {
   const offsetCorrection = calculateOffsetFromNeighbors(domNode, matchedPairs)
-
   let bestMatch: MatchResult | undefined
   let bestScore = -1
 
   designNodeMap.forEach((designNode) => {
-    // const isWithinParents = isWithinParentBounds(designNode, domParentNode, offsetCorrection)
-    // 父节点边界检查
-    if (domParentNode) {
-      return
-    }
-
     // 计算中心点距离和重叠面积比例
     const centerDistance = calculateCenterDistance(domNode.boundingRect, designNode.boundingRect, offsetCorrection)
     const overlapRatio = calculateOverlapRatio(domNode.boundingRect, designNode.boundingRect, offsetCorrection)
-
     // 综合评分：重叠面积权重更高，中心点距离作为辅助
     // 距离越小越好，重叠比例越大越好
     const normalizedCenterScore = Math.max(0, 1 - centerDistance / 50) // 假设50px为最大可接受距离
     const finalScore = normalizedCenterScore * 0.4 + overlapRatio * 0.6
-
-    // 偏移量修正的置信度加成
-    const confidenceBonus = offsetCorrection.confidence * 0.1
-    const adjustedScore = finalScore + confidenceBonus
-
-    if (adjustedScore > bestScore && adjustedScore > 0.3) { // 最低置信度阈值
-      bestScore = adjustedScore
-      bestMatch = {
-        designNodeId: designNode.uniqueId,
-        confidence: adjustedScore,
-        centerDistance,
-        overlapRatio,
-        offsetCorrected: offsetCorrection.confidence > 0,
-      }
+    if (finalScore <= bestScore) {
+      return
+    }
+    bestScore = finalScore
+    bestMatch = {
+      designNodeId: designNode.uniqueId,
+      confidence: finalScore,
+      centerDistance,
+      overlapRatio,
     }
   })
 
@@ -169,10 +117,8 @@ function matchSingleNode({ domNode, designNodeMap, domParentNode, matchedPairs }
 export const recordHybridNodeMatchResult = produce((flatNodeMap: Map<UniqueId, NodeInfo>, designNodeMap: Map<UniqueId, NodeInfo>) => {
   const matchedPairs: MatchedPair[] = []
   flatNodeMap.forEach((domNode) => {
-    // 获取父节点信息
-    const domParentNode = flatNodeMap.get(domNode.parentId)
     // 单节点匹配
-    const matchResult = matchSingleNode({ domNode, designNodeMap, domParentNode, matchedPairs })
+    const matchResult = matchSingleNode({ domNode, designNodeMap, matchedPairs })
     if (!matchResult)
       return
     // 记录匹配结果
