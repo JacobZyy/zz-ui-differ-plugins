@@ -28,34 +28,34 @@ function App() {
     id: '',
   })
 
-  const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
-    const { initialNodeMap: designInfoRecorder, rootNodeBoundingOffset } = await getDesignInfoRecorder(rootNode)
-    rootOffset.current = rootNodeBoundingOffset
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ designInfoRecorder:', designInfoRecorder)
-    const reOrderDesignNodeList = await reOrderDesignNodes(designInfoRecorder)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ reOrderDesignNodeList:', reOrderDesignNodeList)
-    const processedPaddingInfo = await processPaddingInfo(reOrderDesignNodeList)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ processedPaddingInfo:', processedPaddingInfo)
-    const shrinkedBoundingRectInfo = await shrinkRectBounding(processedPaddingInfo)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ shrinkedBoundingRectInfo:', shrinkedBoundingRectInfo)
-    const removedSameSizePositionChildren = await removeSameSizePositionChildren(shrinkedBoundingRectInfo)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ removedSameSizePositionChildren:', removedSameSizePositionChildren)
-    const neighborNodes = await searchNeighborNodes(removedSameSizePositionChildren)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ neighborNodes:', neighborNodes)
-    const distanceResult = await getNeighborNodeDistance(neighborNodes)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ distanceResult:', distanceResult)
-    return distanceResult
-  }
-
   // const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
-  //   return getDesignInfoRecorder(rootNode)
-  //     .then(({ initialNodeMap: designInfoRecorder }) => reOrderDesignNodes(designInfoRecorder))
-  //     .then(processPaddingInfo)
-  //     .then(shrinkRectBounding)
-  //     .then(removeSameSizePositionChildren)
-  //     .then(searchNeighborNodes)
-  //     .then(getNeighborNodeDistance)
+  //   const { initialNodeMap: designInfoRecorder, rootNodeBoundingOffset } = await getDesignInfoRecorder(rootNode)
+  //   rootOffset.current = rootNodeBoundingOffset
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ designInfoRecorder:', designInfoRecorder)
+  //   const reOrderDesignNodeList = await reOrderDesignNodes(designInfoRecorder)
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ reOrderDesignNodeList:', reOrderDesignNodeList)
+  //   const processedPaddingInfo = await processPaddingInfo(reOrderDesignNodeList)
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ processedPaddingInfo:', processedPaddingInfo)
+  //   const shrinkedBoundingRectInfo = await shrinkRectBounding(processedPaddingInfo)
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ shrinkedBoundingRectInfo:', shrinkedBoundingRectInfo)
+  //   const removedSameSizePositionChildren = await removeSameSizePositionChildren(shrinkedBoundingRectInfo)
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ removedSameSizePositionChildren:', removedSameSizePositionChildren)
+  //   const neighborNodes = await searchNeighborNodes(removedSameSizePositionChildren)
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ neighborNodes:', neighborNodes)
+  //   const distanceResult = await getNeighborNodeDistance(neighborNodes)
+  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ distanceResult:', distanceResult)
+  //   return distanceResult
   // }
+
+  const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
+    return getDesignInfoRecorder(rootNode)
+      .then(({ initialNodeMap: designInfoRecorder }) => reOrderDesignNodes(designInfoRecorder))
+      .then(processPaddingInfo)
+      .then(shrinkRectBounding)
+      .then(removeSameSizePositionChildren)
+      .then(searchNeighborNodes)
+      .then(getNeighborNodeDistance)
+  }
 
   // 监听来自插件的消息
   const messageHandler = useMemoizedFn(async (event: MessageEvent) => {
@@ -104,7 +104,7 @@ function App() {
   const copyText = `${DESIGN_NODE_PREFIX}${JSON.stringify(Object.values(selectedNode), null, 2)}`
   return (
     <div className="app">
-      <ReactJson src={originNode || {}} />
+      {/* <ReactJson src={originNode || {}} /> */}
       <Space.Compact>
         <Button variant="filled" color="geekblue" className="copy-btn" data-clipboard-text={copyText}>
           复制节点信息
