@@ -66,7 +66,6 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
       return
     }
     onConfirm(targetRootNode)
-    onClose()
   }
 
   useEffect(() => {

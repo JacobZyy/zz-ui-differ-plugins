@@ -45,12 +45,14 @@ export const shrinkRectBounding = produce((flatNodeMap: Map<UniqueId, NodeInfo>)
     if (!currentNodeInfo || !currentNodeInfo.children?.length)
       return
     // 找当前节点下的子节点里的最小边距
+    console.log('====================targetDirectionPaddingValue:=====================', currentNodeInfo.nodeName)
     paddingInfoDirectionList.forEach((currentPosition) => {
       const targetDirectionPaddingValue = judgePaddingMergable({
         currentNodeInfo,
         flatNodeMap,
         position: currentPosition,
       })
+      console.log('====================targetDirectionPaddingValue:=====================', currentPosition, targetDirectionPaddingValue)
       if (!targetDirectionPaddingValue) {
         return
       }

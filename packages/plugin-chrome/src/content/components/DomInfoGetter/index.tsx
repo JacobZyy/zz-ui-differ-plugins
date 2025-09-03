@@ -20,6 +20,7 @@ import { ChromeMessageType } from '@/types'
 import { chromeMessageSender, generateScreenShot } from '@/utils'
 import { diffResultFilterRules } from '@/utils/diffResultFilterRules'
 import { drawCurrentNodeInfos } from '@/utils/drawCurrentNodeInfos'
+import { uploadResultAsJson } from '@/utils/resultUploader'
 import styles from './index.module.scss'
 import ResultRenderer from './ResultRenderer'
 import RootDetector from './RootDetector'
@@ -159,11 +160,11 @@ export default function DomInfoGetter() {
 
   /** 开始UI差异对比 */
   const handleStartUiDiff = async (rootNode: HTMLElement) => {
-    // 直接关闭弹窗
-    setIsModalOpen(false)
-    // 等待关闭后继续
-    await new Promise(resolve => setTimeout(resolve, 1000))
     await handleDomNodePreProcessChain(rootNode)
+    // 节点处理完后关闭弹窗
+    setIsModalOpen(false)
+    // 等待时间
+    await new Promise(resolve => setTimeout(resolve, 1000))
     const diffResult = uiDiff(flatNodeMap.current, designNodeInfo.current)
     const filteredCorrectDiffResult = diffResult.filter(diffResultFilterRules)
     if (__DEV__) {
@@ -185,7 +186,7 @@ export default function DomInfoGetter() {
     // 缓存截图信息
     setScreenShotInfo(imageResultInfo)
     setDiffResultInfo(filteredCorrectDiffResult)
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise(resolve => setTimeout(resolve, 1000))
     await handleResetDeviceEmulation()
     setIsResultModalOpen(true)
   }
@@ -227,25 +228,35 @@ export default function DomInfoGetter() {
   }
 
   const handleFinishResult = async (resultImage?: string) => {
-    //  结果组装
     const resultData = {
-      screenShot: screenShotInfo.imgUrl,
-      resultImage,
       diffResultInfo,
       domNodeList: Array.from(flatNodeMap.current.values()),
       designNodeList: Array.from(designNodeInfo.current.values()),
-      pageUrl: location.href,
     }
-    const resultJSON = JSON.stringify(resultData, null, 2)
-    await navigator.clipboard.writeText(resultJSON)
-    await new Promise(resolve => setTimeout(resolve, 500))
-    setIsResultModalOpen(false)
-    await modalApi.success({
-      title: '自动走查完成',
-      content: '结果已复制到剪切板，点击链接提交结果',
-      okText: '去提交',
-    })
-    window.open('https://doc.weixin.qq.com/smartsheet/form/1_wpnn3gDAAARYuiUwJ_LnVQrdgd81PAPw_a8bcdd')
+    try {
+      // 上传 JSON 文件并获取 URL
+      const jsonUrl = await uploadResultAsJson(resultData)
+      const clipboardData = {
+        screenShot: screenShotInfo.imgUrl,
+        resultImage,
+        diffResultJson: jsonUrl,
+        pageUrl: location.href,
+      }
+      // 将上传链接复制到剪切板
+      await navigator.clipboard.writeText(JSON.stringify(clipboardData))
+      await new Promise(resolve => setTimeout(resolve, 200))
+      setIsResultModalOpen(false)
+      await modalApi.success({
+        title: '自动走查完成',
+        content: '结果文件已上传并复制链接到剪切板，点击链接提交结果',
+        okText: '去提交',
+      })
+      window.open('https://doc.weixin.qq.com/smartsheet/form/1_wpnn3gDAAARYuiUwJ_LnVQrdgd81PAPw_a8bcdd')
+    }
+    catch (error) {
+      console.error('上传过程出错:', error)
+      messageApi.error('上传过程出错')
+    }
   }
 
   const handleTestCanvas = () => {
@@ -292,7 +303,6 @@ export default function DomInfoGetter() {
               <Button variant="filled" color="gold" onClick={handleChangeWindowSize}>
                 调整设备模拟
               </Button>
-
               <Button variant="filled" color="blue" onClick={handleGetClipboardContent}>
                 获取剪切板内容
               </Button>

@@ -60,6 +60,7 @@ export async function onDomInfoRecorder(rootDom: HTMLElement) {
   const rootDomId = rootDom.getAttribute('unique-id')
   const flatNodeMapEntries = floorOrderDomList.map((domNode) => {
     const nodeInfo = processSingleDomNodeInfo(domNode, rootDomId)
+    console.log('🚀 ~ onDomInfoRecorder ~ nodeInfo:', nodeInfo)
     if (!nodeInfo)
       return null
     return [nodeInfo?.uniqueId, nodeInfo] as const

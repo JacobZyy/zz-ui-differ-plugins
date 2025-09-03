@@ -31,7 +31,7 @@ const verticalMarginRectStyle = {
 
 const sizeRectStyle = {
   stroke: '#83d445',
-  strokeWidth: 2,
+  strokeWidth: 4,
 }
 
 interface UseFabricOptions {
@@ -131,49 +131,25 @@ export default function useFabric({ canvasId, diffResultInfo, imageCount, screen
       })
     }
 
-    if (width !== 0) {
+    if (width !== 0 || height !== 0) {
       handleAddRect({
         left: nodeLeft,
         top: nodeTop + imageTopOffset,
         width: nodeWidth,
         height: nodeHeight,
-        fill: '#83d445',
         opacity: 0.5,
         ...sizeRectStyle,
       })
-      const text = width > 0 ? `宽度大了${width}px` : width < 0 ? `宽度小了${width}px` : ''
-
+      const widthText = width > 0 ? `宽度大了${width}px` : width < 0 ? `宽度小了${width}px` : ''
+      const heightText = height > 0 ? `高度大了${height}px` : height < 0 ? `高度小了${height}px` : ''
       const textLeft = nodeLeft + nodeWidth / 2
-      const textTop = nodeTop + nodeHeight / 2
-
-      handleAddText(text, {
+      const textTop = nodeTop + imageTopOffset
+      const realText = `${widthText}  ${heightText}`
+      handleAddText(realText, {
         left: textLeft,
         top: textTop,
         fill: '#111',
-        fontSize: 10,
-      })
-    }
-
-    if (height !== 0) {
-      handleAddRect({
-        left: nodeLeft,
-        top: nodeTop + imageTopOffset,
-        width: nodeWidth,
-        height: nodeHeight,
-        fill: '#83d445',
-        opacity: 0.5,
-        ...sizeRectStyle,
-      })
-      const text = height > 0 ? `高度大了${height}px` : height < 0 ? `高度小了${height}px` : ''
-
-      const textLeft = nodeLeft + nodeWidth / 2
-      const textTop = nodeTop + nodeHeight / 2
-
-      handleAddText(text, {
-        left: textLeft,
-        top: textTop,
-        fill: '#111',
-        fontSize: 10,
+        fontSize: 12,
       })
     }
   }

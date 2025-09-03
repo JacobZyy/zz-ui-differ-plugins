@@ -13,6 +13,7 @@ export async function generateScreenShot() {
       html.scrollHeight,
       html.offsetHeight,
     )
+    console.log('🚀 ~ generateScreenShot ~ height:', height)
 
     // 获取完整宽度
     const width = Math.max(
@@ -22,6 +23,7 @@ export async function generateScreenShot() {
       html.scrollWidth,
       html.offsetWidth,
     )
+    console.log('🚀 ~ generateScreenShot ~ width:', width)
 
     // 创建canvas
     const canvas = await html2canvas(document.documentElement, {
