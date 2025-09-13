@@ -32,7 +32,6 @@ export default defineConfig({
     react(),
     tailwindcss(),
     crx({ manifest }),
-    // @ts-expect-error zip plugin types are not compatible with vite 7
     zip(zipPluginOptions),
   ],
   css: {

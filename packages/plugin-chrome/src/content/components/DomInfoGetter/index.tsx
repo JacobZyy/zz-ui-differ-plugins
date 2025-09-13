@@ -15,7 +15,6 @@ import {
 } from '@ui-differ/core'
 import { Button, Flex, FloatButton, message, Modal, Spin } from 'antd'
 import { useRef, useState } from 'react'
-import Draggable from 'react-draggable'
 import { ChromeMessageType } from '@/types'
 import { chromeMessageSender, generateScreenShot } from '@/utils'
 import { diffResultFilterRules } from '@/utils/diffResultFilterRules'
@@ -136,7 +135,7 @@ export default function DomInfoGetter() {
   /** 关闭 情况弹窗 */
   const handleCloseModal = () => {
     setIsModalOpen(false)
-    handleResetDeviceEmulation()
+    // handleResetDeviceEmulation()
   }
 
   /** 关闭 结果弹窗 */
@@ -274,14 +273,12 @@ export default function DomInfoGetter() {
     <>
       {contextHolder}
       {modalContextHolder}
-      <Draggable>
-        <FloatButton
-          className={styles.floatButton}
-          icon={<span className="ui-differ-icon" />}
-          type="default"
-          onClick={handleOpenModal}
-        />
-      </Draggable>
+      <FloatButton
+        className={styles.floatButton}
+        icon={<span className="ui-differ-icon" />}
+        type="default"
+        onClick={handleOpenModal}
+      />
 
       <Modal
         title="Dom节点检测"
