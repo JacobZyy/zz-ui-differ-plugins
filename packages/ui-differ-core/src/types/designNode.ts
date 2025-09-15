@@ -25,3 +25,10 @@ export interface RootNodeOffsetInfo {
   height: number
   id: string
 }
+
+export interface RootNodeBoundingOffsetInfo {
+  x: number
+  y: number
+  height: number
+  id: string
+}

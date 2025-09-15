@@ -40,6 +40,10 @@ function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: N
     paddingInfo: childNodeInfo.paddingInfo,
     borderInfo: childNodeInfo.borderInfo,
     backgroundColor: childNodeInfo.backgroundColor,
+    originBounding: childNodeInfo.originBounding,
+    isBFC: childNodeInfo.isBFC,
+    isEmptyNode: childNodeInfo.isEmptyNode,
+    isOutOfDocumentFlow: childNodeInfo.isOutOfDocumentFlow,
     // 判断的逻辑是父节点只有一个子节点
     // 所以可以直接把父节点的兄弟节点作为该子节点的兄弟节点
     sibling: parentNodeInfo.sibling,

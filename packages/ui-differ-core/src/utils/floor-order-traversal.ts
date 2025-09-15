@@ -1,4 +1,5 @@
 import type { NodeWithChild } from '../types'
+import { getDomIsInDocumentFlow } from '../dom-handlers'
 import { nodeNoChildSet } from '../types'
 
 /**
@@ -18,6 +19,11 @@ export function* floorOrderTraversalWithDom(rootDom: Element): Generator<Element
     const currentDom = queue.shift()
     if (!currentDom)
       continue
+    // TODO: 临时处理，过滤文档流之外的节点
+    const isDomInDocumentFlow = getDomIsInDocumentFlow(currentDom)
+    if (!isDomInDocumentFlow) {
+      continue
+    }
 
     // 产出当前节点
     yield currentDom
@@ -80,7 +86,7 @@ export function* floorOrderTraversalWithNode(rootNode: SceneNode): Generator<Sce
 
   while (queue.length > 0) {
     const currentNode = queue.shift()
-    if (!currentNode)
+    if (!currentNode || !currentNode.isVisible)
       continue
 
     // 产出当前节点

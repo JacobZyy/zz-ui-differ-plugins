@@ -29,6 +29,7 @@ export default function DomInfoGetter() {
   const [modalApi, modalContextHolder] = Modal.useModal()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResultModalOpen, setIsResultModalOpen] = useState(false)
+  const rootNodeCls = useRef<string>('.app-wrapper')
   const [screenShotInfo, setScreenShotInfo] = useState<{ imgUrl: string, width: number, height: number }>({
     imgUrl: '',
     width: 0,
@@ -148,9 +149,11 @@ export default function DomInfoGetter() {
    */
   const handleDomNodePreProcessChain = async (rootNode: HTMLElement) => {
     flatNodeMap.current = await onDomInfoRecorder(rootNode)
+      // .then(filterOutOfDocumentFlowNodes) // 过滤文档流之外的节点
       .then(searchNeighborNodesInitial)
       .then(processMarginCollapsing)
       .then(processPaddingInfo)
+      .then(shrinkRectBounding)
       .then(removeSameSizePositionChildren)
       .then(searchNeighborNodes)
       .then(getNeighborNodeDistance)
@@ -165,7 +168,7 @@ export default function DomInfoGetter() {
     // 等待时间
     await new Promise(resolve => setTimeout(resolve, 1000))
     const diffResult = uiDiff(flatNodeMap.current, designNodeInfo.current)
-    const filteredCorrectDiffResult = diffResult.filter(diffResultFilterRules)
+    const filteredCorrectDiffResult = diffResult.filter(resultInfo => diffResultFilterRules(resultInfo, flatNodeMap.current))
     if (__DEV__) {
       filteredCorrectDiffResult.forEach((resultItem) => {
         const { originNode, designNode, distanceResult } = resultItem
@@ -191,22 +194,27 @@ export default function DomInfoGetter() {
   }
 
   const handleTestDomNodeProcessor = async () => {
-    const rootNode = document.querySelector('.app-wrapper')?.children[0]
+    const rootNode = rootNodeCls.current === '.app-wrapper' ? document.getElementById(rootNodeCls.current)?.children[0] : document.querySelector(rootNodeCls.current)
     if (!rootNode)
       return
     const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ initiedFlatNodeMap:', initiedFlatNodeMap)
     const initiedFlatNodeMapWithInitialNeighborInfos = searchNeighborNodesInitial(initiedFlatNodeMap)
     // 处理margin collapse问题
     const marginCollapsedFlatNodeMap = processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
     // 合并无效padding
     const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
     const boundingRectShrinkedNodeMap = shrinkRectBounding(paddingMergedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ shrinkRectBounding:', boundingRectShrinkedNodeMap)
     // 移除相同尺寸、位置的子节点
     const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(boundingRectShrinkedNodeMap)
     // 搜索邻居节点
-    const flatNodeMap = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
+    flatNodeMap.current = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
 
-    drawCurrentNodeInfos(flatNodeMap)
+    // await handleDomNodePreProcessChain(rootNode as HTMLElement)
+    // console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap.current:', flatNodeMap.current)
+    drawCurrentNodeInfos(flatNodeMap.current)
 
     // const targetEl = document.querySelector('.z-nav-bar')
     // const targetId = targetEl?.getAttribute('unique-id')
@@ -243,6 +251,7 @@ export default function DomInfoGetter() {
       }
       // 将上传链接复制到剪切板
       await navigator.clipboard.writeText(JSON.stringify(clipboardData))
+      chalk.info(JSON.stringify(clipboardData, null, 2))
       await new Promise(resolve => setTimeout(resolve, 200))
       setIsResultModalOpen(false)
       await modalApi.success({
@@ -269,6 +278,10 @@ export default function DomInfoGetter() {
     setIsResultModalOpen(true)
   }
 
+  const handleUpdateRootNodeName = (rootClsName: string) => {
+    rootNodeCls.current = rootClsName
+  }
+
   return (
     <>
       {contextHolder}
@@ -291,7 +304,7 @@ export default function DomInfoGetter() {
         destroyOnHidden
       >
         <Spin spinning={clipboardLoading} tip="读取剪切板信息中...">
-          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} />
+          <RootDetector onClose={handleCloseModal} onConfirm={handleStartUiDiff} updateRootNodeName={handleUpdateRootNodeName} />
           {!!__DEV__ && (
             <Flex wrap gap={16}>
               <Button variant="filled" color="magenta" onClick={handleResetDeviceEmulation}>

@@ -1,4 +1,5 @@
-import type { BoundingRect, NodeInfo, NodeWithChild, UniqueId } from '../types'
+import type { BoundingRect, NodeInfo, NodeWithChild, RootNodeOffsetInfo, UniqueId } from '../types'
+import { clone } from 'radash'
 import { nodeWithChildSet } from '../types'
 import { floorOrderTraversalWithNode } from '../utils'
 import { convertDesignToPx } from './convert-design-to-px'
@@ -6,8 +7,10 @@ import { getDesignBackgroundColor, getDesignBorderInfo, getDesignPaddingInfo } f
 import { getParentSiblingNodes } from './get-parent-sibling-nodes'
 /** ios部分头的高度 */
 const PHONE_HEADER_HEIGHT = 88
+// const PHONE_HEADER_HEIGHT = 0
 /** ios底部安全距离的高度 */
 export const SAFE_BOTTOM_HEIGHT = 68
+// export const SAFE_BOTTOM_HEIGHT = 0
 
 function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: number, y: number, id: UniqueId }, designNodeParentSiblingMap: Map<UniqueId, Pick<NodeInfo, 'parentId' | 'sibling'>>) {
   const nodeId = designNode.id
@@ -47,20 +50,13 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
     backgroundColor,
     neighborMarginInfo: {},
     initialNeighborInfos: {},
+    originBounding: clone(realBoundingRect),
   }
   return newNode
 }
 
-export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
+export async function getDesignInfoRecorder(rootDesignNode: SceneNode, rootNodeBoundingOffset: RootNodeOffsetInfo) {
   const floorOrderNodeList = Array.from(floorOrderTraversalWithNode(rootDesignNode))
-  const rootDesignNodeBoundingRect = rootDesignNode.absoluteBoundingBox
-  console.log('🚀 ~ getDesignInfoRecorder ~ rootDesignNodeBoundingRect:', rootDesignNodeBoundingRect)
-  const rootNodeBoundingOffset = {
-    x: rootDesignNodeBoundingRect?.x || 0,
-    y: rootDesignNodeBoundingRect?.y || 0,
-    height: rootDesignNodeBoundingRect?.height || 0,
-    id: rootDesignNode.id,
-  }
 
   const designNodeParentSiblingMap = getParentSiblingNodes(rootDesignNode)
 
@@ -70,6 +66,7 @@ export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
       if (!realBoundingRect || !designNode.id)
         // 没有渲染的节点，或者没有id的节点，直接过滤掉
         return false
+
       // 位于上下安全区的节点先全都过滤掉
       const currentY = realBoundingRect.y - rootNodeBoundingOffset.y
       const isOverTopNode = currentY + realBoundingRect.height <= PHONE_HEADER_HEIGHT
@@ -84,5 +81,5 @@ export async function getDesignInfoRecorder(rootDesignNode: SceneNode) {
 
   const initialNodeMap = new Map(flatNodeMapEntries)
 
-  return { initialNodeMap, rootNodeBoundingOffset }
+  return initialNodeMap
 }

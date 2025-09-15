@@ -2,6 +2,7 @@ import type { NodeInfo, RootNodeOffsetInfo, UniqueId } from '@ui-differ/core'
 import { sendMsgToPlugin, UIMessage } from '@messages/sender'
 
 const PHONE_HEADER_HEIGHT = 88
+// const PHONE_HEADER_HEIGHT = 0
 
 function createColors() {
   return [

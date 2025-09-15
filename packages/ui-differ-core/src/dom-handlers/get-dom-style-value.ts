@@ -217,3 +217,33 @@ export function getDomMarginInfo(dom: Element): DomMarginInfo {
   }
   return marginInfo
 }
+
+/**
+ * 判断DOM元素是否在文档流中
+ * @param dom 目标DOM元素
+ * @returns 是否在文档流中
+ */
+export function getDomIsInDocumentFlow(dom: Element): boolean {
+  const computedStyle = window.getComputedStyle(dom)
+
+  // position为absolute或fixed时，元素脱离文档流
+  const position = computedStyle.getPropertyValue('position')
+  if (position === 'absolute' || position === 'fixed') {
+    return false
+  }
+
+  // float不为none时，元素脱离文档流
+  const float = computedStyle.getPropertyValue('float')
+  if (float !== 'none') {
+    return false
+  }
+
+  // display为none时，元素不在文档流中
+  const display = computedStyle.getPropertyValue('display')
+  if (display === 'none') {
+    return false
+  }
+
+  // 其他情况认为在文档流中
+  return true
+}

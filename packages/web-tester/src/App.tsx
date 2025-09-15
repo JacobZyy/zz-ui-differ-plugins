@@ -1,4 +1,4 @@
-import PaddingTester from './components/padding-tester'
+import PaddingTester from './components/PaddingTester'
 
 function App() {
   return (

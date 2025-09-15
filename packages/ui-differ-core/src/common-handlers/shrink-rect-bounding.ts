@@ -1,17 +1,9 @@
 import type { NodeInfo, UniqueId } from '../types'
 import { produce } from 'immer'
-import { convertPositionToBoundingKeys, SiblingPosition } from '../types'
-import { judgePaddingMergable } from '../utils'
+import { convertDirectionKeyToBoudingKeys } from '../types'
 
 type PaddingInfoDirection = 'left' | 'right' | 'top' | 'bottom'
 const paddingInfoDirectionList = ['left', 'right', 'top', 'bottom'] as const
-
-const paddingDirectionToSiblingPosition: Record<PaddingInfoDirection, SiblingPosition> = {
-  left: SiblingPosition.LEFT,
-  right: SiblingPosition.RIGHT,
-  top: SiblingPosition.TOP,
-  bottom: SiblingPosition.BOTTOM,
-}
 
 /**
  * 获取当前节点下，目标方向的最小距离
@@ -21,41 +13,45 @@ const paddingDirectionToSiblingPosition: Record<PaddingInfoDirection, SiblingPos
  * @returns
  */
 function getMinChildrenPositionDistance(currentNode: NodeInfo, currentPosition: PaddingInfoDirection, flatNodeMap: Map<UniqueId, NodeInfo>) {
-  const siblingPosition = paddingDirectionToSiblingPosition[currentPosition]
-  const boundingKeyList = convertPositionToBoundingKeys[siblingPosition]
+  const boundingKeyList = convertDirectionKeyToBoudingKeys[currentPosition]
   const currentNodeTargetPosValue = boundingKeyList.reduce((acc, cur) => acc + currentNode.boundingRect[cur], 0)
+  // 左上取小，右下取大
+  const targetPositionGetter = currentPosition === 'left' || currentPosition === 'top' ? 'min' : 'max'
   const targetPositionChildren = currentNode.children
-    .map(childId => flatNodeMap.get(childId)!)
-    .filter(childNode => !childNode.initialNeighborInfos?.[siblingPosition])
-    .map((childNode) => {
+    .map((childId) => {
+      const childNode = flatNodeMap.get(childId)!
       const childTargetValue = boundingKeyList.reduce((acc, cur) => acc + childNode.boundingRect[cur], 0)
-      return Math.abs(currentNodeTargetPosValue - childTargetValue)
+      return childTargetValue
     })
-  if (!targetPositionChildren?.length) {
-    return 0
+
+  const targetChildValue = targetPositionChildren?.length ? Math[targetPositionGetter](...targetPositionChildren) : 0
+
+  if (targetPositionGetter === 'min') {
+    if (targetChildValue < currentNodeTargetPosValue) {
+      return 0
+    }
+    return targetChildValue - currentNodeTargetPosValue
   }
-  return Math.min(...targetPositionChildren)
+  if (targetPositionGetter === 'max') {
+    if (targetChildValue > currentNodeTargetPosValue) {
+      return 0
+    }
+    return currentNodeTargetPosValue - targetChildValue
+  }
+
+  return 0
 }
 
 export const shrinkRectBounding = produce((flatNodeMap: Map<UniqueId, NodeInfo>) => {
   const entries = Array.from(flatNodeMap.entries()).toReversed()
   // 反向遍历
   entries.forEach(([nodeId]) => {
-    const currentNodeInfo = flatNodeMap.get(nodeId)
-    if (!currentNodeInfo || !currentNodeInfo.children?.length)
+    const currentNodeInfo = flatNodeMap.get(nodeId)!
+    if (!currentNodeInfo.children.length)
       return
+
     // 找当前节点下的子节点里的最小边距
-    console.log('====================targetDirectionPaddingValue:=====================', currentNodeInfo.nodeName)
     paddingInfoDirectionList.forEach((currentPosition) => {
-      const targetDirectionPaddingValue = judgePaddingMergable({
-        currentNodeInfo,
-        flatNodeMap,
-        position: currentPosition,
-      })
-      console.log('====================targetDirectionPaddingValue:=====================', currentPosition, targetDirectionPaddingValue)
-      if (!targetDirectionPaddingValue) {
-        return
-      }
       // 子节点中，目标方向的最小距离
       const targetPositionDistance = getMinChildrenPositionDistance(currentNodeInfo, currentPosition, flatNodeMap)
       // 把当前节点这个方向的位置减少对应的值

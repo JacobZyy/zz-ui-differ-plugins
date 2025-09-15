@@ -1,4 +1,5 @@
 export * from './dom-info-recorder'
+export * from './filter-out-of-document-flow-nodes'
 export * from './get-dom-style-value'
 export * from './initial-dom-uuid'
 export * from './process-margin-collapsing'

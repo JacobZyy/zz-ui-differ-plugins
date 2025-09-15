@@ -74,9 +74,14 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   isBFC?: boolean
   /** 第一次找邻居节点的信息，用于后续的使用 */
   initialNeighborInfos?: SiblingRelativeNodeInfo
+  /** 是否脱离了文档流 */
+  isOutOfDocumentFlow?: boolean
+  /** 是否是空节点 */
+  isEmptyNode?: boolean
   /** 匹配的设计稿节点id */
   matchedDesignNodeId?: UniqueId
   matchResult?: MatchResult
+  originBounding: BoundingRect
 }
 
 /** 有效的兄弟节点位置 */
@@ -131,4 +136,11 @@ export const convertPositionToBoundingKeys: Record<SiblingPosition, (keyof Bound
   [SiblingPosition.BOTTOM_LEFT]: [],
   [SiblingPosition.BOTTOM_RIGHT]: [],
   [SiblingPosition.NONE]: [],
+}
+
+export const convertDirectionKeyToBoudingKeys: Record<'left' | 'right' | 'top' | 'bottom', (keyof BoundingRect)[]> = {
+  left: ['x'],
+  right: ['x', 'width'],
+  top: ['y'],
+  bottom: ['y', 'height'],
 }

@@ -4,6 +4,7 @@ import {
   DESIGN_NODE_PREFIX,
   getDesignInfoRecorder,
   getNeighborNodeDistance,
+  getRootBoundingOffset,
   processPaddingInfo,
   removeSameSizePositionChildren,
   reOrderDesignNodes,
@@ -48,8 +49,10 @@ function App() {
   // }
 
   const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
-    return getDesignInfoRecorder(rootNode)
-      .then(({ initialNodeMap: designInfoRecorder }) => reOrderDesignNodes(designInfoRecorder))
+    rootOffset.current = getRootBoundingOffset(rootNode)
+    console.log('🚀 ~ handleDesignNodePreProcessChain ~ rootBoundingOffset:', rootOffset.current)
+    return getDesignInfoRecorder(rootNode, rootOffset.current)
+      .then(reOrderDesignNodes)
       .then(processPaddingInfo)
       .then(shrinkRectBounding)
       .then(removeSameSizePositionChildren)
@@ -104,7 +107,7 @@ function App() {
   const copyText = `${DESIGN_NODE_PREFIX}${JSON.stringify(Object.values(selectedNode), null, 2)}`
   return (
     <div className="app">
-      {/* <ReactJson src={originNode || {}} /> */}
+      <ReactJson src={originNode || {}} />
       <Space.Compact>
         <Button variant="filled" color="geekblue" className="copy-btn" data-clipboard-text={copyText}>
           复制节点信息

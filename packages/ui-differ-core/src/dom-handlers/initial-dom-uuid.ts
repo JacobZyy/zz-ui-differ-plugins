@@ -14,9 +14,8 @@ export function initialDomUUID(rootDom: Element): void {
   // 处理所有子节点（包括文本节点）
   const childNodes = Array.from(rootDom.childNodes)
 
-  // NOTE: 这段逻辑删除，方便处理文本节点比对
   // 检查是否需要包装文本节点（只有在兄弟节点中有非文本节点时才包装）
-  // const shouldWrapTextNodes = hasMixedNodeTypes(childNodes)
+  const shouldWrapTextNodes = hasMixedNodeTypes(childNodes)
 
   childNodes.forEach((child) => {
     if (child.nodeType === Node.ELEMENT_NODE) {
@@ -27,7 +26,8 @@ export function initialDomUUID(rootDom: Element): void {
     if (child.nodeType === Node.TEXT_NODE) {
       // 只有在需要包装且文本非空时才处理文本节点
       const textContent = child.textContent?.trim()
-      if (!textContent) {
+
+      if (!textContent || !shouldWrapTextNodes) {
         return
       }
       return wrapTextNodeWithSpan(child as Text, rootDom)
@@ -40,11 +40,11 @@ export function initialDomUUID(rootDom: Element): void {
  * @param childNodes - 子节点列表
  * @returns 是否包含混合类型的节点
  */
-// function hasMixedNodeTypes(childNodes: Node[]): boolean {
-//   const hasTextNode = childNodes.some(node => node.nodeType === Node.TEXT_NODE)
-//   const hasElementNode = childNodes.some(node => node.nodeType === Node.ELEMENT_NODE)
-//   return hasTextNode && hasElementNode
-// }
+function hasMixedNodeTypes(childNodes: Node[]): boolean {
+  const hasTextNode = childNodes.some(node => node.nodeType === Node.TEXT_NODE)
+  const hasElementNode = childNodes.some(node => node.nodeType === Node.ELEMENT_NODE)
+  return hasTextNode && hasElementNode
+}
 
 /**
  * 将文本节点包装在带有 unique-id 的 span 元素中

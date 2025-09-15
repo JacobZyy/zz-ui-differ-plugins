@@ -11,12 +11,12 @@ const DEFAULT_ROOT_NODE_CLASS_NAME = '.app-wrapper'
 interface RootDetectorProps {
   onClose: () => void
   onConfirm: (rootNode: HTMLElement) => void
-
+  updateRootNodeName: (rootClsName: string) => void
 }
 
-export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) {
+export default function RootDetector({ onClose, onConfirm, updateRootNodeName }: RootDetectorProps) {
   const [targetRootNode, setTargetRootNode] = useState<HTMLElement | null>(null)
-  const [isEdit, _setIsEdit] = useState(false)
+  const [isEdit, setIsEdit] = useState(false)
   const [form] = Form.useForm()
 
   function processNotFountError(className?: string) {
@@ -53,12 +53,17 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
       return
     }
     setTargetRootNode(targetNode)
+    updateRootNodeName(`.${rootClsName}`)
     /** 初始化节点唯一 id */
     initialDomUUID(targetNode)
   }
 
   const handleCloseModal = () => {
     onClose()
+  }
+
+  const handleChangeEdit = () => {
+    setIsEdit(true)
   }
 
   const handleStartUiDiff = () => {
@@ -83,6 +88,7 @@ export default function RootDetector({ onClose, onConfirm }: RootDetectorProps) 
           👉
           <Tag color="green" className={styles.defaultNodeTag}>[第一个子节点]</Tag>
         </Flex>
+        <Button variant="solid" color="danger" onClick={handleChangeEdit}>修改检测根节点</Button>
       </Flex>
       {(!targetRootNode || isEdit) && (
         <Form form={form} onFinish={handleSubmitFindNode} layout="vertical">
