@@ -41,6 +41,7 @@ export function drawCurrentNodeInfos(flatNodeMap: Map<UniqueId, NodeInfo>) {
     overlay.style.pointerEvents = 'none' // 不阻止鼠标事件
     overlay.style.zIndex = '9999'
     overlay.style.boxSizing = 'border-box'
+    overlay.setAttribute('target-node-id', nodeInfo.uniqueId)
 
     // 添加到页面
     document.body.appendChild(overlay)

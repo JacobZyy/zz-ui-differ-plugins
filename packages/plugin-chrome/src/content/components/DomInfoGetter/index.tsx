@@ -194,26 +194,22 @@ export default function DomInfoGetter() {
   }
 
   const handleTestDomNodeProcessor = async () => {
-    const rootNode = rootNodeCls.current === '.app-wrapper' ? document.getElementById(rootNodeCls.current)?.children[0] : document.querySelector(rootNodeCls.current)
+    const rootNode = rootNodeCls.current === '.app-wrapper' ? document.querySelector(rootNodeCls.current)?.firstElementChild : document.querySelector(rootNodeCls.current)
     if (!rootNode)
       return
     const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ initiedFlatNodeMap:', initiedFlatNodeMap)
     const initiedFlatNodeMapWithInitialNeighborInfos = searchNeighborNodesInitial(initiedFlatNodeMap)
     // 处理margin collapse问题
     const marginCollapsedFlatNodeMap = processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
     // 合并无效padding
     const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ paddingMergedFlatNodeMap:', paddingMergedFlatNodeMap)
     const boundingRectShrinkedNodeMap = shrinkRectBounding(paddingMergedFlatNodeMap)
-    console.log('🚀 ~ handleTestDomNodeProcessor ~ shrinkRectBounding:', boundingRectShrinkedNodeMap)
     // 移除相同尺寸、位置的子节点
     const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(boundingRectShrinkedNodeMap)
     // 搜索邻居节点
     flatNodeMap.current = searchNeighborNodes(removedSameSizePositionChildrenFlatNodeMap)
 
     // await handleDomNodePreProcessChain(rootNode as HTMLElement)
-    // console.log('🚀 ~ handleTestDomNodeProcessor ~ flatNodeMap.current:', flatNodeMap.current)
     drawCurrentNodeInfos(flatNodeMap.current)
 
     // const targetEl = document.querySelector('.z-nav-bar')
@@ -249,9 +245,9 @@ export default function DomInfoGetter() {
         diffResultJson: jsonUrl,
         pageUrl: location.href,
       }
+      chalk.info(JSON.stringify(clipboardData, null, 2))
       // 将上传链接复制到剪切板
       await navigator.clipboard.writeText(JSON.stringify(clipboardData))
-      chalk.info(JSON.stringify(clipboardData, null, 2))
       await new Promise(resolve => setTimeout(resolve, 200))
       setIsResultModalOpen(false)
       await modalApi.success({
