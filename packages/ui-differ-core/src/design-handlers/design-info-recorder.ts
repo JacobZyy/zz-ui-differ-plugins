@@ -2,6 +2,7 @@ import type { BoundingRect, NodeInfo, NodeWithChild, RootNodeOffsetInfo, UniqueI
 import { clone } from 'radash'
 import { nodeWithChildSet } from '../types'
 import { floorOrderTraversalWithNode } from '../utils'
+import { getDesignNodeTextStyle } from '../utils/getTextStyleInfo'
 import { convertDesignToPx } from './convert-design-to-px'
 import { getDesignBackgroundColor, getDesignBorderInfo, getDesignPaddingInfo } from './get-design-style-value'
 import { getParentSiblingNodes } from './get-parent-sibling-nodes'
@@ -38,6 +39,8 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
   const siblingParentInfo = designNodeParentSiblingMap.get(nodeId)
   const parentId = siblingParentInfo?.parentId || ''
   const siblingIds = siblingParentInfo?.sibling || []
+  const textStyleInfo = getDesignNodeTextStyle(designNode)
+
   const newNode: NodeInfo = {
     nodeName: designNode.name,
     uniqueId: nodeId,
@@ -50,6 +53,7 @@ function processSingleDesignNodeInfo(designNode: SceneNode, rootOffset: { x: num
     backgroundColor,
     neighborMarginInfo: {},
     initialNeighborInfos: {},
+    textStyleInfo,
     originBounding: clone(realBoundingRect),
   }
   return newNode

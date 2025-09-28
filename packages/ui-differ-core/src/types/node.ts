@@ -3,6 +3,30 @@ import { SiblingPosition } from './enums'
 
 export type UniqueId = string
 
+export interface TextStyleInfo {
+  /** 行高 */
+  lineHeight: number
+  // /** 字体大小 */
+  // fontSize: number
+  // /** 字体粗细 */
+  // fontWeight: number
+  // /** 字体 */
+  // fontFamily: string
+  /** 文本行数 */
+  textLineCount: number
+}
+
+export interface NodeFlexInfo {
+  isFlex: boolean
+  flexDirection: string
+  flexWrap: string
+  justifyContent: string
+  alignItems: string
+  flexShrink: string
+  flexGrow: string
+  flexBasis: string
+}
+
 type BorderWidthKey = 'borderWidthLeft' | 'borderWidthRight' | 'borderWidthTop' | 'borderWidthBottom'
 type BorderColorKey = 'borderColorLeft' | 'borderColorRight' | 'borderColorTop' | 'borderColorBottom'
 export interface BorderInfo {
@@ -80,6 +104,10 @@ export interface NodeInfo extends SiblingRelativeNodeInfo {
   isEmptyNode?: boolean
   /** 匹配的设计稿节点id */
   matchedDesignNodeId?: UniqueId
+  /** 文本样式信息, 只有内部是文本的节点才有这个字段 */
+  textStyleInfo?: TextStyleInfo
+  /** 节点的中心信息 @description DOM ONLY */
+  nodeFlexInfo?: NodeFlexInfo
   matchResult?: MatchResult
   originBounding: BoundingRect
 }

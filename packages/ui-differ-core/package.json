@@ -23,6 +23,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@types/react": "^18.3.24",
     "vite-plugin-dts": "^4.0.0"
   },
   "publishConfig": {

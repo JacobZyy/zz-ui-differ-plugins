@@ -1,7 +1,42 @@
 import type { DiffResultInfo, NodeInfo, UniqueId } from '../types'
 import chalk from '@alita/chalk'
-import { SiblingPosition, siblingPositionToDiffResultKey } from '../types'
+import { produce } from 'immer'
+import { NodeFlexType, SiblingPosition, siblingPositionToDiffResultKey } from '../types'
 import { fixedSubstract } from '../utils'
+import { getMultiLineHeightOffset } from '../utils/getMultiLineHeightOffset'
+
+interface DiffResultOptions {
+  currentNodeInfo: NodeInfo
+  designNode: NodeInfo
+  diffResultMap: Map<UniqueId, DiffResultInfo>
+}
+
+interface FixDistanceInfoOptions {
+  direction: SiblingPosition
+  currentNodeInfo: NodeInfo
+  currentDiffResult: Map<UniqueId, DiffResultInfo>
+}
+
+/**
+ * 判断当前节点是否为flex1
+ * @param nodeInfo 当前节点
+ * @param flatNodeMap 所有节点map
+ * @returns {NodeFlexType} flex类型
+ */
+function getIsFlex1(nodeInfo: NodeInfo, flatNodeMap: Map<UniqueId, NodeInfo>): NodeFlexType {
+  const parentNode = flatNodeMap.get(nodeInfo.parentId)
+  if (!parentNode)
+    return NodeFlexType.NOT_FLEX
+  if (!parentNode.nodeFlexInfo?.isFlex)
+    return NodeFlexType.NOT_FLEX
+  if (nodeInfo.nodeFlexInfo?.flexGrow !== '1') {
+    return NodeFlexType.NOT_FLEX_1
+  }
+  if (parentNode.nodeFlexInfo?.flexDirection === 'column' || parentNode.nodeFlexInfo?.flexDirection === 'column-reverse') {
+    return NodeFlexType.FLEX_COLUMN_1
+  }
+  return NodeFlexType.FLEX_ROW_1
+}
 
 function calculateWeightedDifference(diffResult: DiffResultInfo): number {
   const { distanceResult } = diffResult
@@ -14,12 +49,6 @@ function calculateWeightedDifference(diffResult: DiffResultInfo): number {
     + Math.abs(distanceResult.marginRight) * marginWeight
     + Math.abs(distanceResult.width) * sizeWeight
     + Math.abs(distanceResult.height) * sizeWeight
-}
-
-interface FixDistanceInfoOptions {
-  direction: SiblingPosition
-  currentNodeInfo: NodeInfo
-  currentDiffResult: Map<UniqueId, DiffResultInfo>
 }
 
 // TODO: 临时修正方法，正解应该需要找父节点的匹配结果
@@ -37,9 +66,9 @@ function getFixedDistanceInfo({ direction, currentNodeInfo, currentDiffResult }:
 
   return value + targetOriginDistance
 }
-function createDiffResult(currentNodeInfo: NodeInfo, designNode: NodeInfo, diffResultMap: Map<UniqueId, DiffResultInfo>): DiffResultInfo {
-  const { boundingRect } = currentNodeInfo
 
+function createDiffResult({ currentNodeInfo, designNode, diffResultMap }: DiffResultOptions): DiffResultInfo {
+  const { boundingRect } = currentNodeInfo
   const fixedRight = getFixedDistanceInfo({ direction: SiblingPosition.RIGHT, currentNodeInfo, currentDiffResult: diffResultMap })
   const fixedBottom = getFixedDistanceInfo({ direction: SiblingPosition.BOTTOM, currentNodeInfo, currentDiffResult: diffResultMap })
   const fixedLeft = getFixedDistanceInfo({ direction: SiblingPosition.LEFT, currentNodeInfo, currentDiffResult: diffResultMap })
@@ -68,6 +97,44 @@ function createDiffResult(currentNodeInfo: NodeInfo, designNode: NodeInfo, diffR
   }
 }
 
+function correctDiffResult({ diffResultMap, flatNodeMap, designNodeMap }: { diffResultMap: Map<UniqueId, DiffResultInfo>, flatNodeMap: Map<UniqueId, NodeInfo>, designNodeMap: Map<UniqueId, NodeInfo> }) {
+  return produce(diffResultMap, (draftDiffResultMap) => {
+    draftDiffResultMap.forEach((diffResult) => {
+      const { originNode, designNode } = diffResult
+      // 修正flex1场景下的宽高比对结果
+      const currentFlexType = getIsFlex1(originNode, flatNodeMap)
+      const isRowFlex1 = currentFlexType === NodeFlexType.FLEX_ROW_1
+      const isColumnFlex1 = currentFlexType === NodeFlexType.FLEX_COLUMN_1
+      if (isRowFlex1) {
+        diffResult.distanceResult.width = 0
+      }
+      if (isColumnFlex1) {
+        diffResult.distanceResult.height = 0
+      }
+
+      const topSiblingNodeInfo = flatNodeMap.get(originNode[SiblingPosition.TOP] || '')
+      const topMatchedDesignNode = designNodeMap.get(topSiblingNodeInfo?.matchedDesignNodeId || '')
+
+      const originEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
+      // if (originEl?.textContent === '隐私清除') {
+      //   debugger
+      // }
+
+      const { top: siblingTopOffset, height: siblingHeightOffset, coefficient: siblingCoefficient = 1 } = (topSiblingNodeInfo && topMatchedDesignNode) ? getMultiLineHeightOffset(topSiblingNodeInfo, topMatchedDesignNode, flatNodeMap) : { top: 0, height: 0 }
+      const { top: textStyleTopOffset, height: textStyleHeightOffset, coefficient: textStyleCoefficient = 1 } = getMultiLineHeightOffset(originNode, designNode, flatNodeMap)
+      if (originEl?.textContent === '隐私清除') {
+        console.log('🚀 ~ correctDiffResult ~ siblingTopOffset:', topSiblingNodeInfo, siblingTopOffset, siblingHeightOffset)
+      }
+      const siblingBottomOffsetValue = siblingHeightOffset - siblingTopOffset
+      // 上方边距纠正：上方节点的bottom+当前节点的top
+      diffResult.distanceResult.marginTop += siblingBottomOffsetValue * siblingCoefficient + textStyleTopOffset * textStyleCoefficient
+      // height纠正
+      diffResult.distanceResult.height += textStyleHeightOffset * textStyleCoefficient
+      // 下方边距纠正 TODO: 这个不重要
+    })
+  })
+}
+
 export function uiDiff(flatNodeMap: Map<UniqueId, NodeInfo>, designNodeMap: Map<UniqueId, NodeInfo>): DiffResultInfo[] {
   const allDiffResultMap = new Map<UniqueId, DiffResultInfo>()
 
@@ -81,14 +148,19 @@ export function uiDiff(flatNodeMap: Map<UniqueId, NodeInfo>, designNodeMap: Map<
       return
     }
 
-    const diffResult = createDiffResult(currentNodeInfo, designNode, allDiffResultMap)
+    const diffResult = createDiffResult({ currentNodeInfo, designNode, diffResultMap: allDiffResultMap })
     allDiffResultMap.set(currentNodeInfo.uniqueId, diffResult)
   })
+
+  console.log('🚀 ~ uiDiff ~ allDiffResultMap:', allDiffResultMap)
+  // 第二遍遍历：遍历一遍修正一些间距
+  const correctedDiffResultMap = correctDiffResult({ diffResultMap: allDiffResultMap, flatNodeMap, designNodeMap })
+  console.log('🚀 ~ uiDiff ~ candidatesByDesignNode:', correctedDiffResultMap)
 
   // 第二次遍历：按design节点分组并筛选最佳匹配
   const candidatesByDesignNode = new Map<UniqueId, DiffResultInfo[]>()
 
-  allDiffResultMap.forEach((diffResult) => {
+  correctedDiffResultMap.forEach((diffResult) => {
     const designNodeId = diffResult.designNode.uniqueId
 
     if (!candidatesByDesignNode.has(designNodeId)) {

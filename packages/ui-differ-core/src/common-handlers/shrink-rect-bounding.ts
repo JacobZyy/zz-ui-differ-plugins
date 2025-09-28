@@ -43,6 +43,7 @@ function getMinChildrenPositionDistance(currentNode: NodeInfo, currentPosition: 
 }
 
 export const shrinkRectBounding = produce((flatNodeMap: Map<UniqueId, NodeInfo>) => {
+  console.log('🚀 ~ shrinkRectBounding ~ flatNodeMap:', flatNodeMap)
   const entries = Array.from(flatNodeMap.entries()).toReversed()
   // 反向遍历
   entries.forEach(([nodeId]) => {
@@ -70,6 +71,17 @@ export const shrinkRectBounding = produce((flatNodeMap: Map<UniqueId, NodeInfo>)
         currentNodeInfo.boundingRect.height -= targetPositionDistance
       }
     })
+
+    console.log('🚀 ~ currentNodeInfo.textStyleInfo:', !!currentNodeInfo.textStyleInfo)
+    if (!currentNodeInfo.textStyleInfo)
+      return
+    // 只有内部节点是文本节点的节点，把宽度设置为父节点的宽度
+    const parentNodeInfo = flatNodeMap.get(currentNodeInfo.parentId)
+    console.log('🚀 ~ parentNodeInfo:', parentNodeInfo)
+    if (!parentNodeInfo)
+      return
+    currentNodeInfo.boundingRect.x = parentNodeInfo.boundingRect.x
+    currentNodeInfo.boundingRect.width = parentNodeInfo.boundingRect.width
   })
 },
 )

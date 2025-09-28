@@ -21,3 +21,10 @@ export enum SiblingPosition {
   /** 右下角 */
   BOTTOM_RIGHT = 9,
 }
+
+export enum NodeFlexType {
+  NOT_FLEX = -1,
+  NOT_FLEX_1 = 0,
+  FLEX_COLUMN_1 = 1,
+  FLEX_ROW_1 = 2,
+}

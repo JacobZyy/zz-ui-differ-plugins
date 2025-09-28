@@ -1,6 +1,7 @@
-import type { BoundingRect, NodeInfo } from '../types'
+import type { BoundingRect, NodeFlexInfo, NodeInfo } from '../types'
 import { clone } from 'radash'
 import { floorOrderTraversalWithDom } from '../utils'
+import { getDomTextStyleInfo } from '../utils/getTextStyleInfo'
 import { getDomBackgroundColor, getDomBorderInfo, getDomIsBfc, getDomIsInDocumentFlow, getDomPaddingInfo } from './get-dom-style-value'
 
 function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
@@ -18,15 +19,15 @@ function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
     width: boundingRect.width,
     height: fixedHeight,
   }
-  // const isInlineNode = computedStyle.display === 'inline'
+  const isInlineNode = computedStyle.display === 'inline'
 
-  // if (isInlineNode) {
-  //   const lineHeight = computedStyle.lineHeight
-  //   const lineHeightValue = Number(lineHeight.replace('px', ''))
-  //   realBoundingRect.height = Math.round(lineHeightValue)
-  //   const fixedY = (fixedHeight - lineHeightValue) / 2 + realBoundingRect.y
-  //   realBoundingRect.y = fixedY
-  // }
+  if (isInlineNode) {
+    const lineHeight = computedStyle.lineHeight
+    const lineHeightValue = Number(lineHeight.replace('px', ''))
+    realBoundingRect.height = Math.round(lineHeightValue)
+    const fixedY = (fixedHeight - lineHeightValue) / 2 + realBoundingRect.y
+    realBoundingRect.y = fixedY
+  }
 
   const nodeName = `.${Array.from(domNode.classList).join('.')}`
 
@@ -48,6 +49,7 @@ function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
   const backgroundColor = getDomBackgroundColor(domNode)
   const isBFC = getDomIsBfc(domNode)
   const isInDocumentFlow: boolean = getDomIsInDocumentFlow(domNode)
+  const textStyleInfo = getDomTextStyleInfo(domNode)
 
   // 过滤空节点
   const hasNoChild = !childrenIds?.length
@@ -57,6 +59,17 @@ function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
   const borderColorList = Object.values(borderInfo?.borderColor || {})
   const noneBorder = borderWidthList.every(it => !it) || borderColorList.every(it => it === 'transparent')
   const isEmptyNode = hasNoChild && emptyText && transparentBg && noneBorder
+
+  const nodeFlexInfo: NodeFlexInfo = {
+    isFlex: computedStyle.display === 'flex',
+    flexDirection: computedStyle.flexDirection ?? 'row',
+    flexWrap: computedStyle.flexWrap ?? 'nowrap',
+    justifyContent: computedStyle.justifyContent,
+    alignItems: computedStyle.alignItems,
+    flexShrink: computedStyle.flexShrink,
+    flexGrow: computedStyle.flexGrow,
+    flexBasis: computedStyle.flexBasis,
+  }
 
   const newNode: NodeInfo = {
     nodeName,
@@ -73,6 +86,8 @@ function processSingleDomNodeInfo(domNode: Element, rootDomId: string | null) {
     initialNeighborInfos: {},
     isBFC,
     isOutOfDocumentFlow: !isInDocumentFlow,
+    nodeFlexInfo,
+    textStyleInfo,
     isEmptyNode,
   }
   return newNode

@@ -1,6 +1,5 @@
 import type { BoundingRect, MatchResult, NodeInfo, UniqueId } from '../types'
 import { produce } from 'immer'
-import { SiblingPosition } from '../types'
 
 interface OffsetCorrection {
   x: number
@@ -61,17 +60,18 @@ function calculateOffsetFromNeighbors(
   domNode: NodeInfo,
   matchedPairs: MatchedPair[],
 ): OffsetCorrection {
-  const matchedMap = new Map(matchedPairs.map(pair => [pair.domNodeId, pair]))
+  return { x: 0, y: 0 }
+  // const matchedMap = new Map(matchedPairs.map(pair => [pair.domNodeId, pair]))
 
-  // 优先使用左侧节点的偏移量
-  const matchedLeftInfo = matchedMap.get(domNode[SiblingPosition.LEFT] || '')
-  const correctLeft = matchedLeftInfo?.offset.x || 0
+  // // 优先使用左侧节点的偏移量
+  // const matchedLeftInfo = matchedMap.get(domNode[SiblingPosition.LEFT] || '')
+  // const correctLeft = matchedLeftInfo?.offset.x || 0
 
-  // 其次使用上方节点的偏移量
-  const matchedTopInfo = matchedMap.get(domNode[SiblingPosition.TOP] || '')
-  const correctTop = matchedTopInfo?.offset.y || 0
+  // // 其次使用上方节点的偏移量
+  // const matchedTopInfo = matchedMap.get(domNode[SiblingPosition.TOP] || '')
+  // const correctTop = matchedTopInfo?.offset.y || 0
 
-  return { x: correctLeft, y: correctTop }
+  // return { x: correctLeft, y: correctTop }
 }
 
 interface MatchSingleNodeOptions {
@@ -96,7 +96,7 @@ function matchSingleNode({ domNode, designNodeMap, matchedPairs }: MatchSingleNo
     // 距离越小越好，重叠比例越大越好
     const normalizedCenterScore = Math.max(0, 1 - centerDistance / 50) // 假设50px为最大可接受距离
     const finalScore = normalizedCenterScore * 0.4 + overlapRatio * 0.6
-    if (finalScore <= bestScore) {
+    if (finalScore <= bestScore || finalScore < 0.5) {
       return
     }
     bestScore = finalScore

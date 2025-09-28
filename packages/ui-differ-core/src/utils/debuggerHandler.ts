@@ -1,5 +1,6 @@
 export function debuggerHandler(currentId: string, targetCls: string) {
   const currentEl = document.querySelector(`[unique-id="${currentId}"]`)
+  console.log('🚀 ~ debuggerHandler ~ currentEl:', currentEl)
   if (!currentEl) {
     return
   }

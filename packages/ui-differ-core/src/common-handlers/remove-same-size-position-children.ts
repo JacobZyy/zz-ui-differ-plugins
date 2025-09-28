@@ -44,6 +44,8 @@ function mergeParentNodeIntoChildNode(parentNodeInfo: NodeInfo, childNodeInfo: N
     isBFC: childNodeInfo.isBFC,
     isEmptyNode: childNodeInfo.isEmptyNode,
     isOutOfDocumentFlow: childNodeInfo.isOutOfDocumentFlow,
+    textStyleInfo: childNodeInfo.textStyleInfo,
+    nodeFlexInfo: parentNodeInfo.nodeFlexInfo,
     // 判断的逻辑是父节点只有一个子节点
     // 所以可以直接把父节点的兄弟节点作为该子节点的兄弟节点
     sibling: parentNodeInfo.sibling,
@@ -102,6 +104,8 @@ export async function removeSameSizePositionChildren(flatNodeMap: Map<UniqueId, 
     if (!childNode)
       return null
     const { width, height, x, y } = childNode.boundingRect
+    const originEl = document.querySelector(`[unique-id="${currentNodeId}"]`)
+    const childEl = document.querySelector(`[unique-id="${childNodeId}"]`)
     const isSameSize = isSameDistance(curNode.boundingRect.width, width) && isSameDistance(curNode.boundingRect.height, height)
     const isSamePosition = isSameDistance(curNode.boundingRect.x, x) && isSameDistance(curNode.boundingRect.y, y)
     if (!isSameSize || !isSamePosition)
@@ -109,6 +113,9 @@ export async function removeSameSizePositionChildren(flatNodeMap: Map<UniqueId, 
     // 如果当前节点和子节点尺寸和位置相同，则返回当前节点id(需要被排除)
     return [currentNodeId, childNodeId] as const
   }).filter(it => it != null)
+  if (nodeIdReplaceEntries.length === 0) {
+    return flatNodeMap
+  }
 
   // 更新层序的顺序
   const newFloorNodeIdList = produce(floorNodeIdList, (draft) => {
@@ -151,5 +158,6 @@ export async function removeSameSizePositionChildren(flatNodeMap: Map<UniqueId, 
     })
     .filter(it => it != null)
 
-  return new Map<UniqueId, NodeInfo>(resultMapEntries)
+  const newFlatMap = new Map<UniqueId, NodeInfo>(resultMapEntries)
+  return removeSameSizePositionChildren(newFlatMap)
 }

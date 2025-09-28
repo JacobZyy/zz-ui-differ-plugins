@@ -151,6 +151,7 @@ export default function DomInfoGetter() {
     flatNodeMap.current = await onDomInfoRecorder(rootNode)
       // .then(filterOutOfDocumentFlowNodes) // 过滤文档流之外的节点
       .then(searchNeighborNodesInitial)
+      .then(removeSameSizePositionChildren)
       .then(processMarginCollapsing)
       .then(processPaddingInfo)
       .then(shrinkRectBounding)
@@ -174,6 +175,9 @@ export default function DomInfoGetter() {
         const { originNode, designNode, distanceResult } = resultItem
         const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
         const designNodeName = designNode.nodeName
+        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.info(`========匹配分数信息: ${originNode.matchResult?.confidence}========\n`)
         chalk.info('========dom节点:========\n')
         console.info(nodeEl)
         console.info(originNode)
@@ -181,7 +185,8 @@ export default function DomInfoGetter() {
         console.info(designNode)
         chalk.info(`========比对结果:========\n`)
         console.info(distanceResult)
-        chalk.info('-------------------------\n')
+        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
       })
     }
     const imageResultInfo = await generateScreenShot()
@@ -200,10 +205,11 @@ export default function DomInfoGetter() {
     const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)
     const initiedFlatNodeMapWithInitialNeighborInfos = searchNeighborNodesInitial(initiedFlatNodeMap)
     // 处理margin collapse问题
-    const marginCollapsedFlatNodeMap = processMarginCollapsing(initiedFlatNodeMapWithInitialNeighborInfos)
+    const marginCollapsedFlatNodeMap = (await removeSameSizePositionChildren(initiedFlatNodeMapWithInitialNeighborInfos).then(processMarginCollapsing))
     // 合并无效padding
     const paddingMergedFlatNodeMap = processPaddingInfo(marginCollapsedFlatNodeMap)
     const boundingRectShrinkedNodeMap = shrinkRectBounding(paddingMergedFlatNodeMap)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ boundingRectShrinkedNodeMap:', boundingRectShrinkedNodeMap)
     // 移除相同尺寸、位置的子节点
     const removedSameSizePositionChildrenFlatNodeMap = await removeSameSizePositionChildren(boundingRectShrinkedNodeMap)
     // 搜索邻居节点

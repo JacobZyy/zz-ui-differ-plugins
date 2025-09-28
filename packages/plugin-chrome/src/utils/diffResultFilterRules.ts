@@ -45,19 +45,11 @@ export function diffResultFilterRules(diffResult: DiffResultInfo, flatNodeMap: M
   }
 
   const isPureText = getIsPureTextNode(originNode, flatNodeMap)
-
-  // // 过滤空节点
-  // const hasNoChild = !originNode.children?.length
-  // const emptyText = originElement?.textContent?.trim() === ''
-  // const transparentBg = originNode.backgroundColor === 'transparent'
-  // const borderWidthList = Object.values(originNode.borderInfo?.borderWidth || {})
-  // const borderColorList = Object.values(originNode.borderInfo?.borderColor || {})
-  // const noneBorder = borderWidthList.every(it => !it) || borderColorList.every(it => it === 'transparent')
-  // const isEmptyNode = hasNoChild && emptyText && transparentBg && noneBorder
-  // if (isEmptyNode) {
-  //   // 空节点直接过滤
-  //   return false
-  // }
+  const isRootNode = !originNode.parentId
+  if (isRootNode) {
+    console.log('🚀 ~ diffResultFilterRules ~ originNode.uniqueId:', originNode.uniqueId)
+    return false
+  }
 
   const { marginLeft, marginTop, marginBottom, marginRight, width, height } = distanceResult
   const originNodeLeftMargin = originNode.neighborMarginInfo[SiblingPosition.LEFT]
@@ -74,17 +66,17 @@ export function diffResultFilterRules(diffResult: DiffResultInfo, flatNodeMap: M
   const isValidateRight = originNodeRightMargin?.isDirectlySibling === designNodeRightMargin?.isDirectlySibling
   const isValidateBottom = originNodeBottomMargin?.isDirectlySibling === designNodeBottomMargin?.isDirectlySibling
 
-  const isSameWidth = !!width && !isPureText
-  const isSameHeight = !!height && !isPureText
-  const isSameMarginLeft = !!marginLeft && isValidateLeft
-  const isSameMarginTop = !!marginTop && isValidateTop
-  const isSameMarginRight = !!marginRight && isValidateRight
-  const isSameMarginBottom = !!marginBottom && isValidateBottom
+  const isNotSameWidth = !!width && !isPureText
+  const isNotSameHeight = !!height && !isPureText
+  const isNotSameMarginLeft = !!marginLeft && isValidateLeft
+  const isNotSameMarginTop = !!marginTop && isValidateTop
+  const isNotSameMarginRight = !!marginRight && isValidateRight
+  const isNotSameMarginBottom = !!marginBottom && isValidateBottom
 
-  return isSameWidth
-    || isSameHeight
-    || isSameMarginLeft
-    || isSameMarginTop
-    || isSameMarginRight
-    || isSameMarginBottom
+  return isNotSameWidth
+    || isNotSameHeight
+    || isNotSameMarginLeft
+    || isNotSameMarginTop
+    || isNotSameMarginRight
+    || isNotSameMarginBottom
 }
