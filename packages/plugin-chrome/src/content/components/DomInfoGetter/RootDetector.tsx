@@ -6,7 +6,6 @@ import styles from './index.module.scss'
 const { Text } = Typography
 
 const DEFAULT_ROOT_NODE_ID = 'app'
-const DEFAULT_ROOT_NODE_CLASS_NAME = '.app-wrapper'
 
 interface RootDetectorProps {
   onClose: () => void
@@ -30,12 +29,12 @@ export default function RootDetector({ onClose, onConfirm, updateRootNodeName }:
       processNotFountError()
       return
     }
-    const appWrapperNode = appNode.querySelector(DEFAULT_ROOT_NODE_CLASS_NAME)
-    if (!appWrapperNode) {
-      processNotFountError()
-      return
-    }
-    const targetNode = appWrapperNode.firstElementChild
+    // const appWrapperNode = appNode.querySelector(DEFAULT_ROOT_NODE_CLASS_NAME)
+    // if (!appWrapperNode) {
+    //   processNotFountError()
+    //   return
+    // }
+    const targetNode = appNode.firstElementChild
     if (!(targetNode instanceof HTMLElement)) {
       processNotFountError()
       return
@@ -83,8 +82,6 @@ export default function RootDetector({ onClose, onConfirm, updateRootNodeName }:
         <Text strong>节点搜索的默认路线</Text>
         <Flex gap={8} align="center">
           <Tag color="blue" className={styles.defaultNodeTag}>app</Tag>
-          👉
-          <Tag color="geekblue" className={styles.defaultNodeTag}>app-wrapper</Tag>
           👉
           <Tag color="green" className={styles.defaultNodeTag}>[第一个子节点]</Tag>
         </Flex>

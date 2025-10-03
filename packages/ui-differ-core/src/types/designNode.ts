@@ -32,3 +32,20 @@ export interface RootNodeBoundingOffsetInfo {
   height: number
   id: string
 }
+
+export type NodeCanBeMask
+  = | GroupNode
+    | FrameNode
+    | PenNode
+    | StarNode
+    | LineNode
+    | EllipseNode
+    | PolygonNode
+    | RectangleNode
+    | TextNode
+    | ComponentNode
+    | ComponentSetNode
+    | InstanceNode
+    | BooleanOperationNode
+
+export const nodeCanBeMaskSet = new Set<SceneNode['type']>(['GROUP', 'FRAME', 'RECTANGLE', 'TEXT', 'LINE', 'ELLIPSE', 'POLYGON', 'STAR', 'PEN', 'COMPONENT', 'COMPONENT_SET', 'INSTANCE', 'BOOLEAN_OPERATION'])

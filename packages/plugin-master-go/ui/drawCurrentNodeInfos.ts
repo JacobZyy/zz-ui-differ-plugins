@@ -1,9 +1,6 @@
 import type { NodeInfo, RootNodeOffsetInfo, UniqueId } from '@ui-differ/core'
 import { sendMsgToPlugin, UIMessage } from '@messages/sender'
 
-const PHONE_HEADER_HEIGHT = 88
-// const PHONE_HEADER_HEIGHT = 0
-
 function createColors() {
   return [
     { r: 1, g: 0, b: 0, a: 1 },
@@ -25,7 +22,7 @@ function calculateAbsolutePosition(
 ) {
   return {
     x: rootOffset.x + boundingRect.x,
-    y: rootOffset.y + boundingRect.y + PHONE_HEADER_HEIGHT,
+    y: rootOffset.y + boundingRect.y,
     width: boundingRect.width,
     height: boundingRect.height,
   }
@@ -37,7 +34,7 @@ function createDrawingData(flatNodeMap: Map<UniqueId, NodeInfo>, rootOffset: Roo
   return {
     overlays: Array.from(flatNodeMap.entries()).map(([uniqueId, nodeInfo], index) => ({
       uniqueId,
-      name: `ui-differ-overlay-${index}`,
+      name: `ui-differ-overlay-${nodeInfo.nodeName || index}-${uniqueId}`,
       position: calculateAbsolutePosition(nodeInfo.boundingRect, rootOffset),
       style: {
         fills: [],

@@ -29,7 +29,7 @@ export default function DomInfoGetter() {
   const [modalApi, modalContextHolder] = Modal.useModal()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isResultModalOpen, setIsResultModalOpen] = useState(false)
-  const rootNodeCls = useRef<string>('.app-wrapper')
+  const rootNodeCls = useRef<string>()
   const [screenShotInfo, setScreenShotInfo] = useState<{ imgUrl: string, width: number, height: number }>({
     imgUrl: '',
     width: 0,
@@ -169,14 +169,17 @@ export default function DomInfoGetter() {
     // 等待时间
     await new Promise(resolve => setTimeout(resolve, 1000))
     const diffResult = uiDiff(flatNodeMap.current, designNodeInfo.current)
+    console.log('🚀 ~ handleStartUiDiff ~ diffResult:', diffResult)
     const filteredCorrectDiffResult = diffResult.filter(resultInfo => diffResultFilterRules(resultInfo, flatNodeMap.current))
+    console.log('🚀 ~ handleStartUiDiff ~ filteredCorrectDiffResult:', filteredCorrectDiffResult)
+    chalk.info(`共${diffResult.length}个节点，异常节点${filteredCorrectDiffResult.length}`)
     if (__DEV__) {
       filteredCorrectDiffResult.forEach((resultItem) => {
         const { originNode, designNode, distanceResult } = resultItem
         const nodeEl = document.querySelector(`[unique-id="${originNode.uniqueId}"]`)
         const designNodeName = designNode.nodeName
-        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
-        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.green('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.green('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
         chalk.info(`========匹配分数信息: ${originNode.matchResult?.confidence}========\n`)
         chalk.info('========dom节点:========\n')
         console.info(nodeEl)
@@ -185,8 +188,8 @@ export default function DomInfoGetter() {
         console.info(designNode)
         chalk.info(`========比对结果:========\n`)
         console.info(distanceResult)
-        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
-        chalk.warn('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.green('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+        chalk.green('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
       })
     }
     const imageResultInfo = await generateScreenShot()
@@ -199,7 +202,8 @@ export default function DomInfoGetter() {
   }
 
   const handleTestDomNodeProcessor = async () => {
-    const rootNode = rootNodeCls.current === '.app-wrapper' ? document.querySelector(rootNodeCls.current)?.firstElementChild : document.querySelector(rootNodeCls.current)
+    console.log('🚀 ~ handleTestDomNodeProcessor ~ rootNodeCls.current:', rootNodeCls.current)
+    const rootNode = rootNodeCls.current ? document.querySelector(rootNodeCls.current) : document.querySelector('#app')?.firstElementChild
     if (!rootNode)
       return
     const initiedFlatNodeMap = await onDomInfoRecorder(rootNode as HTMLElement)

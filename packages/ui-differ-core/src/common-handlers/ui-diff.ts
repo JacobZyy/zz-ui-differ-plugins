@@ -144,7 +144,7 @@ export function uiDiff(flatNodeMap: Map<UniqueId, NodeInfo>, designNodeMap: Map<
     const { matchedDesignNodeId } = currentNodeInfo
     const designNode = designNodeMap.get(matchedDesignNodeId || '')
     if (!designNode) {
-      chalk.warn(`当前节点${currentNodeInfo.uniqueId}没有匹配到设计稿节点`)
+      chalk.green(`当前节点${currentNodeInfo.uniqueId}没有匹配到设计稿节点`)
       return
     }
 

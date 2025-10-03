@@ -1,36 +1,9 @@
 import type { BorderInfo, PaddingInfo } from '../types'
-import { convertDesignToPx } from './convert-design-to-px'
-
-/**
- * 获取设计稿的内边距的值
- * @param designNode 目标设计稿节点
- * @returns 内边距信息
- */
-export function getDesignPaddingInfo(designNode: SceneNode): PaddingInfo {
-  // 只有Frame节点开启自动布局的时候才会产生有效padding
-  if (designNode.type !== 'FRAME' || designNode.flexMode === 'NONE') {
-    return {
-      paddingLeft: 0,
-      paddingRight: 0,
-      paddingTop: 0,
-      paddingBottom: 0,
-    }
-  }
-  const paddingLeft = convertDesignToPx(designNode.paddingLeft)
-  const paddingRight = convertDesignToPx(designNode.paddingRight)
-  const paddingTop = convertDesignToPx(designNode.paddingTop)
-  const paddingBottom = convertDesignToPx(designNode.paddingBottom)
-  return {
-    paddingLeft,
-    paddingRight,
-    paddingTop,
-    paddingBottom,
-  }
-}
+import type { ConvertFunction } from './design-converter'
 
 /**
  * 获取dom的背景色，如果背景色为透明，则返回'transparent'
- * @param dom 目标dom
+ * @param designNode 目标设计稿节点
  * @returns 背景色
  */
 export function getDesignBackgroundColor(designNode: SceneNode) {
@@ -46,40 +19,6 @@ export function getDesignBackgroundColor(designNode: SceneNode) {
     return 'transparent'
   }
   return `rgba(${r * 255}, ${g * 255}, ${b * 255}, ${a})`
-}
-
-/**
- * 获取设计稿的边框宽度信息
- * @param designNode 目标设计稿节点
- * @returns 边框宽度信息
- */
-function getBorderWidthInfo(designNode: SceneNode): BorderInfo['borderWidth'] {
-  // 切片节点没有边框
-  if (designNode.type === 'SLICE') {
-    return {
-      borderWidthLeft: 0,
-      borderWidthRight: 0,
-      borderWidthTop: 0,
-      borderWidthBottom: 0,
-    }
-  }
-  // 矩形、实例、组件、组件集节点
-  if (designNode.type === 'FRAME' || designNode.type === 'RECTANGLE' || designNode.type === 'INSTANCE' || designNode.type === 'COMPONENT' || designNode.type === 'COMPONENT_SET') {
-    // 有单独的边框宽度，返回对应的边框宽度
-    return {
-      borderWidthLeft: convertDesignToPx(designNode.strokeTopWeight),
-      borderWidthRight: convertDesignToPx(designNode.strokeRightWeight),
-      borderWidthTop: convertDesignToPx(designNode.strokeTopWeight),
-      borderWidthBottom: convertDesignToPx(designNode.strokeBottomWeight),
-    }
-  }
-  // 其他节点，返回统一的边框宽度
-  return {
-    borderWidthLeft: convertDesignToPx(designNode.strokeWeight),
-    borderWidthRight: convertDesignToPx(designNode.strokeWeight),
-    borderWidthTop: convertDesignToPx(designNode.strokeWeight),
-    borderWidthBottom: convertDesignToPx(designNode.strokeWeight),
-  }
 }
 
 /**
@@ -117,13 +56,87 @@ function getBorderColorInfo(designNode: SceneNode): BorderInfo['borderColor'] {
 }
 
 /**
- * 获取设计稿的边框信息
- * @param designNode 目标设计稿节点
- * @returns 边框信息
+ * 创建可配置的设计样式值获取器
+ * @param converter 转换函数
+ * @returns 样式值获取器对象
  */
-export function getDesignBorderInfo(designNode: SceneNode): BorderInfo {
+export function createDesignStyleValueGetters(converter: ConvertFunction) {
+  /**
+   * 获取设计稿的内边距的值
+   * @param designNode 目标设计稿节点
+   * @returns 内边距信息
+   */
+  function getDesignPaddingInfo(designNode: SceneNode): PaddingInfo {
+    // 只有Frame节点开启自动布局的时候才会产生有效padding
+    if (designNode.type !== 'FRAME' || designNode.flexMode === 'NONE') {
+      return {
+        paddingLeft: 0,
+        paddingRight: 0,
+        paddingTop: 0,
+        paddingBottom: 0,
+      }
+    }
+    const paddingLeft = converter(designNode.paddingLeft)
+    const paddingRight = converter(designNode.paddingRight)
+    const paddingTop = converter(designNode.paddingTop)
+    const paddingBottom = converter(designNode.paddingBottom)
+    return {
+      paddingLeft,
+      paddingRight,
+      paddingTop,
+      paddingBottom,
+    }
+  }
+
+  /**
+   * 获取设计稿的边框宽度信息
+   * @param designNode 目标设计稿节点
+   * @returns 边框宽度信息
+   */
+  function getBorderWidthInfo(designNode: SceneNode): BorderInfo['borderWidth'] {
+    // 切片节点没有边框
+    if (designNode.type === 'SLICE') {
+      return {
+        borderWidthLeft: 0,
+        borderWidthRight: 0,
+        borderWidthTop: 0,
+        borderWidthBottom: 0,
+      }
+    }
+    // 矩形、实例、组件、组件集节点
+    if (designNode.type === 'FRAME' || designNode.type === 'RECTANGLE' || designNode.type === 'INSTANCE' || designNode.type === 'COMPONENT' || designNode.type === 'COMPONENT_SET') {
+      // 有单独的边框宽度，返回对应的边框宽度
+      return {
+        borderWidthLeft: converter(designNode.strokeTopWeight),
+        borderWidthRight: converter(designNode.strokeRightWeight),
+        borderWidthTop: converter(designNode.strokeTopWeight),
+        borderWidthBottom: converter(designNode.strokeBottomWeight),
+      }
+    }
+    // 其他节点，返回统一的边框宽度
+    return {
+      borderWidthLeft: converter(designNode.strokeWeight),
+      borderWidthRight: converter(designNode.strokeWeight),
+      borderWidthTop: converter(designNode.strokeWeight),
+      borderWidthBottom: converter(designNode.strokeWeight),
+    }
+  }
+
+  /**
+   * 获取设计稿的边框信息
+   * @param designNode 目标设计稿节点
+   * @returns 边框信息
+   */
+  function getDesignBorderInfo(designNode: SceneNode): BorderInfo {
+    return {
+      borderWidth: getBorderWidthInfo(designNode),
+      borderColor: getBorderColorInfo(designNode),
+    }
+  }
+
   return {
-    borderWidth: getBorderWidthInfo(designNode),
-    borderColor: getBorderColorInfo(designNode),
+    getDesignPaddingInfo,
+    getDesignBorderInfo,
+    getDesignBackgroundColor,
   }
 }

@@ -1,27 +1,25 @@
 import type { NodeInfo, RootNodeOffsetInfo, UniqueId } from '@ui-differ/core'
 import { PluginMessage, sendMsgToPlugin, UIMessage } from '@messages/sender'
 import {
+  combineMaskLayers,
+  createDesignNodeProcessChain,
   DESIGN_NODE_PREFIX,
-  getDesignInfoRecorder,
-  getNeighborNodeDistance,
   getRootBoundingOffset,
-  processPaddingInfo,
-  removeSameSizePositionChildren,
-  reOrderDesignNodes,
-  searchNeighborNodes,
-  shrinkRectBounding,
+  hoistingRectangleStyle,
+  processOverFlowHidden,
 } from '@ui-differ/core'
 import { useMemoizedFn } from 'ahooks'
-import { Button, message, Space } from 'antd'
+import { Button, Input, message, Space } from 'antd'
 import ClipboardJS from 'clipboard'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactJson from 'react-json-view'
 import { drawCurrentNodeInfos } from './drawCurrentNodeInfos'
 import './App.css'
 
 function App() {
   const [selectedNode, setSelectedNode] = useState<Record<UniqueId, NodeInfo>>({})
-  const [originNode, setOriginNode] = useState<SceneNode>()
+  const [originNodeData, setOriginNodeData] = useState<SceneNode>()
+  const [originNodeNoChild, setOriginNodeNoChild] = useState<SceneNode>()
   const rootOffset = useRef<RootNodeOffsetInfo>({
     x: 0,
     y: 0,
@@ -29,49 +27,52 @@ function App() {
     id: '',
   })
 
-  // const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
-  //   const { initialNodeMap: designInfoRecorder, rootNodeBoundingOffset } = await getDesignInfoRecorder(rootNode)
-  //   rootOffset.current = rootNodeBoundingOffset
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ designInfoRecorder:', designInfoRecorder)
-  //   const reOrderDesignNodeList = await reOrderDesignNodes(designInfoRecorder)
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ reOrderDesignNodeList:', reOrderDesignNodeList)
-  //   const processedPaddingInfo = await processPaddingInfo(reOrderDesignNodeList)
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ processedPaddingInfo:', processedPaddingInfo)
-  //   const shrinkedBoundingRectInfo = await shrinkRectBounding(processedPaddingInfo)
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ shrinkedBoundingRectInfo:', shrinkedBoundingRectInfo)
-  //   const removedSameSizePositionChildren = await removeSameSizePositionChildren(shrinkedBoundingRectInfo)
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ removedSameSizePositionChildren:', removedSameSizePositionChildren)
-  //   const neighborNodes = await searchNeighborNodes(removedSameSizePositionChildren)
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ neighborNodes:', neighborNodes)
-  //   const distanceResult = await getNeighborNodeDistance(neighborNodes)
-  //   console.log('🚀 ~ handleDesignNodePreProcessChain ~ distanceResult:', distanceResult)
-  //   return distanceResult
-  // }
-
-  const handleDesignNodePreProcessChain = async (rootNode: SceneNode) => {
+  /** 获取转换成px信息后的设计稿信息（用于复制） */
+  const handleGetConvertedNodeData = async (rootNode: SceneNode) => {
+    const defaultConfig = {
+      safeTopHeight: 88, // 原PHONE_HEADER_HEIGHT
+      safeBottomHeight: 68, // 原SAFE_BOTTOM_HEIGHT
+      convertPxTrigger: true,
+    }
+    const processChain = createDesignNodeProcessChain(defaultConfig)
     rootOffset.current = getRootBoundingOffset(rootNode)
-    console.log('🚀 ~ handleDesignNodePreProcessChain ~ rootBoundingOffset:', rootOffset.current)
-    return getDesignInfoRecorder(rootNode, rootOffset.current)
-      .then(reOrderDesignNodes)
-      .then(processPaddingInfo)
-      .then(shrinkRectBounding)
-      .then(removeSameSizePositionChildren)
-      .then(searchNeighborNodes)
-      .then(getNeighborNodeDistance)
+    const flatNodeMap = await processChain(rootNode, rootOffset.current)
+    setSelectedNode(Object.fromEntries(flatNodeMap.entries()))
+  }
+
+  /** 获取转换成px信息后的设计稿信息（用于测试绘制） */
+  const handleGetNodeConvertedNodeData = async (rootNode: SceneNode) => {
+    const customConfig = {
+      safeTopHeight: 0,
+      safeBottomHeight: 0,
+      convertPxTrigger: false,
+    }
+    const customProcessChain = createDesignNodeProcessChain(customConfig)
+    rootOffset.current = getRootBoundingOffset(rootNode)
+    const flatNodeMap = await customProcessChain(rootNode, rootOffset.current)
+    return flatNodeMap
+  }
+
+  const handlePreProcessNodeData = (rootNode: SceneNode) => {
+    const combinedNode = combineMaskLayers(rootNode)
+    const hoistedNode = hoistingRectangleStyle(combinedNode)
+    const overFlowHiddenNode = processOverFlowHidden(hoistedNode)
+    return overFlowHiddenNode
   }
 
   // 监听来自插件的消息
   const messageHandler = useMemoizedFn(async (event: MessageEvent) => {
     const { type, data } = event.data
-    const { children, ...rest } = data[0]
-    setOriginNode(rest)
     if (type === PluginMessage.SELECTION_CHANGE) {
       if (!data?.length) {
         message.error('请选中你需要走查的设计稿')
         return
       }
-      const flatNodeMap = await handleDesignNodePreProcessChain(data[0])
-      setSelectedNode(Object.fromEntries(flatNodeMap.entries()))
+      const processOriginData: any = handlePreProcessNodeData(data[0])
+      setOriginNodeData(processOriginData)
+      handleGetConvertedNodeData(processOriginData)
+      const { children, ...rest } = processOriginData
+      setOriginNodeNoChild(rest)
     }
   })
 
@@ -100,23 +101,51 @@ function App() {
     return () => window.removeEventListener('message', messageHandler)
   }, [])
 
-  const handleDrawNodeInfos = () => {
-    drawCurrentNodeInfos(new Map(Object.entries(selectedNode)), rootOffset.current)
+  const handleDrawNodeInfos = async () => {
+    if (!originNodeData) {
+      message.error('请选中你需要走查的设计稿')
+      return
+    }
+    const nodeDataForDraw = await handleGetNodeConvertedNodeData(originNodeData)
+    drawCurrentNodeInfos(nodeDataForDraw, rootOffset.current)
+  }
+
+  /** 测试用 */
+  const handleBackgroundRectangleTest = async () => {
+    if (!originNodeData)
+      return
+    const updatedNode = hoistingRectangleStyle(originNodeData)
+    setOriginNodeData(updatedNode)
   }
 
   const copyText = `${DESIGN_NODE_PREFIX}${JSON.stringify(Object.values(selectedNode), null, 2)}`
+
+  const [searchKey, setSearchKey] = useState('')
+
+  const showSelectedNode = useMemo(() => {
+    if (!searchKey)
+      return selectedNode
+    return selectedNode[searchKey]
+  }, [selectedNode, searchKey])
+
   return (
     <div className="app">
-      <ReactJson src={originNode || {}} />
+      <ReactJson src={originNodeNoChild || {}} />
+      <Input value={searchKey} onChange={e => setSearchKey(e.target.value)} />
       <Space.Compact>
         <Button variant="filled" color="geekblue" className="copy-btn" data-clipboard-text={copyText}>
           复制节点信息
         </Button>
+      </Space.Compact>
+      <Space.Compact>
         <Button variant="filled" color="blue" onClick={handleDrawNodeInfos}>
           绘制节点
         </Button>
+        <Button variant="filled" color="blue" onClick={handleBackgroundRectangleTest}>
+          背景rectangle样式提升测试
+        </Button>
       </Space.Compact>
-      <ReactJson src={selectedNode} collapsed theme="solarized" />
+      <ReactJson src={showSelectedNode} collapsed theme="solarized" />
     </div>
   )
 }

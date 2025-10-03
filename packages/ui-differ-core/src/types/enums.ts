@@ -28,3 +28,8 @@ export enum NodeFlexType {
   FLEX_COLUMN_1 = 1,
   FLEX_ROW_1 = 2,
 }
+
+/** ios部分头的高度 */
+export const PHONE_HEADER_HEIGHT = 88
+/** ios底部安全距离的高度 */
+export const SAFE_BOTTOM_HEIGHT = 68

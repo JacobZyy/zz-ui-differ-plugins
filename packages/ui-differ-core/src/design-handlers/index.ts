@@ -1,5 +1,7 @@
 export * from './convert-design-to-px'
+export * from './design-converter'
 export * from './design-info-recorder'
+export * from './design-process-chain'
 export * from './get-design-style-value'
 export * from './get-parent-sibling-nodes'
 export * from './get-root-bounding-offset'
